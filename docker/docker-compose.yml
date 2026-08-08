@@ -1,0 +1,38 @@
+networks:
+  familymenu-backend-net:
+
+services:
+  familymenu-backend:
+    build:
+      context: ..
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    networks:
+      - familymenu-backend-net
+    depends_on:
+      - postgres-familymenu-backend
+
+  postgres-familymenu-backend:
+    image: postgres:16
+    container_name: familymenu-backend-postgres
+    restart: unless-stopped
+    networks:
+      - familymenu-backend-net
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT}:5432"
+    volumes:
+      - familymenu-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  familymenu-postgres-data:
