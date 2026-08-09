@@ -2,12 +2,17 @@ package com.familymenu.backend.adapter.persistence.entity;
 
 import com.familymenu.backend.domain.dish.Unit;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "dish_ingredients")
 public class DishIngredientEntity {

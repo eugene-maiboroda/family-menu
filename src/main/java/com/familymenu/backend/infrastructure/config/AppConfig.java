@@ -1,4 +1,4 @@
-package com.familymenu.backend.infrastructure;
+package com.familymenu.backend.infrastructure.config;
 
 import org.springframework.context.annotation.Configuration;
 

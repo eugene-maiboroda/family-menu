@@ -1,4 +1,4 @@
-package com.familymenu.backend.infrastructure.exeption;
+package com.familymenu.backend.infrastructure.exception;
 
 public class DishNotFoundException extends RuntimeException {
     public DishNotFoundException(String message) {

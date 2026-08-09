@@ -2,7 +2,7 @@ package com.familymenu.backend.adapter.web.mapper;
 
 import com.familymenu.backend.adapter.web.dto.ShoppingListItemResponse;
 import com.familymenu.backend.domain.shopping.ShoppingListItem;
-import com.familymenu.backend.infrastructure.MapStructConfig;
+import com.familymenu.backend.infrastructure.config.MapStructConfig;
 import org.mapstruct.Mapper;
 
 import java.util.List;

@@ -6,9 +6,9 @@ import lombok.Setter;
 
 import java.util.List;
 
-@Builder
 @Getter
 @Setter
+@Builder(toBuilder = true)
 public class Dish {
 
     private String id;

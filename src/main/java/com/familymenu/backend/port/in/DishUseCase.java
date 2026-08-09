@@ -6,9 +6,9 @@ import java.util.List;
 
 public interface DishUseCase {
 
-    Dish createDish(Dish dish);
+    void createDish(Dish dish);
 
-    void updateDish(Dish dish);
+    Dish updateDish(Dish dish);
 
     void deleteDish(String id);
 

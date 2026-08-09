@@ -21,6 +21,7 @@ public record CreateDishRequest(
         @Valid
         List<IngredientRequest> ingredients,
 
+        @Valid
         List<RecipeStep> recipeSteps
 ) {
 

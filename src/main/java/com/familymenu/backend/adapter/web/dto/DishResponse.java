@@ -16,6 +16,6 @@ public record DishResponse(
 
         List<DishIngredient> ingredients,
 
-        List<RecipeStep> restaurantSteps
+        List<RecipeStep> recipeSteps
 ) {
 }
