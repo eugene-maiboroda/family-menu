@@ -1,4 +1,4 @@
-package com.familymenu.backend.domain;
+package com.familymenu.backend.domain.dish;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -12,9 +12,13 @@ import java.util.List;
 public class Dish {
 
     private String id;
+
     private String name;
-    private String description;
+
+    private List<RecipeStep> recipeSteps;
+
     private DishCategory category;
 
     private List<DishIngredient> ingredients;
+
 }

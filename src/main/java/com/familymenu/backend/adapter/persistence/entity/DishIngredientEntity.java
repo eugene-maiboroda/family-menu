@@ -1,6 +1,6 @@
 package com.familymenu.backend.adapter.persistence.entity;
 
-import com.familymenu.backend.domain.Unit;
+import com.familymenu.backend.domain.dish.Unit;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;

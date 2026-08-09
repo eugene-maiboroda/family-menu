@@ -1,6 +1,7 @@
-package com.familymenu.backend.adapter.web;
+package com.familymenu.backend.adapter.web.controller;
 
-import com.familymenu.backend.application.dto.ShoppingListItem;
+import com.familymenu.backend.adapter.web.dto.ShoppingListItemResponse;
+import com.familymenu.backend.adapter.web.mapper.MenuMapper;
 import com.familymenu.backend.port.in.MenuUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,8 +18,12 @@ public class MenuController {
 
 private final MenuUseCase menuUseCase;
 
+private final MenuMapper menuMapper;
+
     @GetMapping("/{menuId}/shopping-list")
-    public List<ShoppingListItem> getShoppingList(@PathVariable Long menuId) {
-        return menuUseCase.getShoppingList(menuId);
+    public List<ShoppingListItemResponse> getShoppingList(@PathVariable String menuId) {
+        return  menuUseCase.getShoppingList(menuId).stream().
+                map(menuMapper::toResponse)
+                .toList();
     }
 }

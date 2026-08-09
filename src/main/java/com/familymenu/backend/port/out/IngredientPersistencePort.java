@@ -1,8 +1,7 @@
 package com.familymenu.backend.port.out;
 
-import com.familymenu.backend.domain.Ingredient;
+import com.familymenu.backend.domain.dish.Ingredient;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface IngredientPersistencePort {

@@ -1,6 +1,6 @@
 package com.familymenu.backend.port.out;
 
-import com.familymenu.backend.domain.Menu;
+import com.familymenu.backend.domain.menu.Menu;
 
 import java.util.List;
 import java.util.Optional;

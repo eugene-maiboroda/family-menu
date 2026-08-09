@@ -1,7 +1,6 @@
 package com.familymenu.backend.application;
 
-import com.familymenu.backend.adapter.persistence.repository.DishRepository;
-import com.familymenu.backend.domain.Dish;
+import com.familymenu.backend.domain.dish.Dish;
 import com.familymenu.backend.port.in.DishUseCase;
 import com.familymenu.backend.port.out.DishPersistencePort;
 import lombok.RequiredArgsConstructor;

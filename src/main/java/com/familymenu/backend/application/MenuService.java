@@ -1,7 +1,8 @@
 package com.familymenu.backend.application;
 
-import com.familymenu.backend.application.dto.ShoppingListItem;
-import com.familymenu.backend.domain.Menu;
+import com.familymenu.backend.application.dto.CreateMenuCommand;
+import com.familymenu.backend.domain.shopping.ShoppingListItem;
+import com.familymenu.backend.domain.menu.Menu;
 import com.familymenu.backend.port.in.MenuUseCase;
 import com.familymenu.backend.port.out.MenuPersistencePort;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,7 @@ public class MenuService implements MenuUseCase {
     private final MenuPersistencePort menuPersistence;
 
     @Override
-    public Menu createMenu(Menu menu) {
+    public Menu createMenu(CreateMenuCommand menuCommand) {
         return null;
     }
 
@@ -40,7 +41,7 @@ public class MenuService implements MenuUseCase {
     }
 
     @Override
-    public List<ShoppingListItem> getShoppingList(Long menuId) {
+    public List<ShoppingListItem> getShoppingList(String menuId) {
         return List.of();
     }
 }

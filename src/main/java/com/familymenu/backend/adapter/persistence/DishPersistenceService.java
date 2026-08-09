@@ -1,6 +1,6 @@
 package com.familymenu.backend.adapter.persistence;
 
-import com.familymenu.backend.domain.Dish;
+import com.familymenu.backend.domain.dish.Dish;
 import com.familymenu.backend.port.out.DishPersistencePort;
 import org.springframework.stereotype.Repository;
 

@@ -1,14 +1,21 @@
 package com.familymenu.backend.adapter.web.dto;
 
-import com.familymenu.backend.domain.DishCategory;
+import com.familymenu.backend.domain.dish.DishCategory;
+import com.familymenu.backend.domain.dish.DishIngredient;
+import com.familymenu.backend.domain.dish.RecipeStep;
 
 import java.util.List;
 
 public record DishResponse(
+
         String id,
+
         String name,
-        String description,
+
         DishCategory category,
-        List<IngredientResponse> ingredients
+
+        List<DishIngredient> ingredients,
+
+        List<RecipeStep> restaurantSteps
 ) {
 }

@@ -1,13 +1,14 @@
 package com.familymenu.backend.port.in;
 
-import com.familymenu.backend.application.dto.ShoppingListItem;
-import com.familymenu.backend.domain.Menu;
+import com.familymenu.backend.application.dto.CreateMenuCommand;
+import com.familymenu.backend.domain.shopping.ShoppingListItem;
+import com.familymenu.backend.domain.menu.Menu;
 
 import java.util.List;
 
 public interface MenuUseCase {
 
-    Menu createMenu(Menu menu);
+    Menu createMenu(CreateMenuCommand menuCommand);
 
     void updateMenu(Menu menu);
 
@@ -17,5 +18,5 @@ public interface MenuUseCase {
 
     Menu getMenu(String id);
 
-    List<ShoppingListItem> getShoppingList(Long menuId);
+    List<ShoppingListItem> getShoppingList(String menuId);
 }

@@ -1,10 +1,9 @@
 package com.familymenu.backend.adapter.persistence;
 
-import com.familymenu.backend.domain.Ingredient;
+import com.familymenu.backend.domain.dish.Ingredient;
 import com.familymenu.backend.port.out.IngredientPersistencePort;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository

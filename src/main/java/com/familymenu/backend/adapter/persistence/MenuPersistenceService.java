@@ -1,6 +1,6 @@
 package com.familymenu.backend.adapter.persistence;
 
-import com.familymenu.backend.domain.Menu;
+import com.familymenu.backend.domain.menu.Menu;
 import com.familymenu.backend.port.out.MenuPersistencePort;
 import org.springframework.stereotype.Repository;
 
