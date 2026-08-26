@@ -35,9 +35,6 @@ public class DishService implements DishUseCase {
                 .build();
 
         dishPort.save(dishForSave);
-        dishPort.saveDishIngredients(dishForSave.getId(), resolvedIngredients);
-
-
     }
 
     @Override

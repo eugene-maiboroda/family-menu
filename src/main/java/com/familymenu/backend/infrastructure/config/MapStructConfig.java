@@ -8,7 +8,7 @@ import org.mapstruct.ReportingPolicy;
 @MapperConfig(
         componentModel = "spring",
         unmappedTargetPolicy = ReportingPolicy.ERROR,
-        unmappedSourcePolicy = ReportingPolicy.WARN,
+        unmappedSourcePolicy = ReportingPolicy.IGNORE,
         injectionStrategy = InjectionStrategy.CONSTRUCTOR
 )
 

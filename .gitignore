@@ -12,6 +12,7 @@ docker/.env
 .settings
 .springBeans
 .sts4-cache
+README_FOR_AI.md
 
 ### IntelliJ IDEA ###
 .idea
