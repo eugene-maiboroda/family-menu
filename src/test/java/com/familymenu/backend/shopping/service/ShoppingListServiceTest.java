@@ -1,0 +1,105 @@
+package com.familymenu.backend.shopping.service;
+
+import com.familymenu.backend.dish.api.DishApi;
+import com.familymenu.backend.dish.api.dto.DishIngredientView;
+import com.familymenu.backend.dish.api.dto.DishView;
+import com.familymenu.backend.menu.api.MenuApi;
+import com.familymenu.backend.menu.api.dto.MenuView;
+import com.familymenu.backend.shopping.domain.ShoppingListItem;
+import com.familymenu.backend.shopping.domain.Unit;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+class ShoppingListServiceTest {
+
+    private InMemoryMenuApi menuApi;
+    private InMemoryDishApi dishApi;
+    private ShoppingListService service;
+
+    @BeforeEach
+    void setUp() {
+        menuApi = new InMemoryMenuApi();
+        dishApi = new InMemoryDishApi();
+        service = new ShoppingListService(menuApi, dishApi);
+    }
+
+    @Test
+    void buildsShoppingListThroughMenuAndDishApis() {
+        menuApi.menus.put("menu-1", new MenuView(
+                "menu-1",
+                Instant.parse("2026-08-28T09:00:00Z"),
+                List.of("dish-1", "dish-2")
+        ));
+        dishApi.dishes.put("dish-1", dish("dish-1", ingredient("tomato", "Tomato", "500", "G")));
+        dishApi.dishes.put("dish-2", dish("dish-2", ingredient("tomato", "Tomato", "700", "G")));
+
+        List<ShoppingListItem> result = service.getShoppingList("menu-1");
+
+        assertThat(result).containsExactly(
+                new ShoppingListItem("tomato", "Tomato", new BigDecimal("1.2"), Unit.KG)
+        );
+    }
+
+    @Test
+    void rejectsUnknownMenu() {
+        assertThatThrownBy(() -> service.getShoppingList("missing-menu"))
+                .isInstanceOf(ShoppingMenuNotFoundException.class)
+                .hasMessageContaining("missing-menu");
+    }
+
+    @Test
+    void rejectsIncompleteDishReadFromModuleApi() {
+        menuApi.menus.put("menu-1", new MenuView(
+                "menu-1",
+                Instant.parse("2026-08-28T09:00:00Z"),
+                List.of("dish-1", "missing-dish")
+        ));
+        dishApi.dishes.put("dish-1", dish("dish-1", ingredient("tomato", "Tomato", "500", "G")));
+
+        assertThatThrownBy(() -> service.getShoppingList("menu-1"))
+                .isInstanceOf(ShoppingDishNotFoundException.class)
+                .hasMessageContaining("missing-dish");
+    }
+
+    private DishView dish(String id, DishIngredientView ingredient) {
+        return new DishView(id, id, "DINNER", List.of(ingredient), List.of());
+    }
+
+    private DishIngredientView ingredient(String id, String name, String amount, String unit) {
+        return new DishIngredientView(id, name, new BigDecimal(amount), unit);
+    }
+
+    private static final class InMemoryMenuApi implements MenuApi {
+
+        private final Map<String, MenuView> menus = new HashMap<>();
+
+        @Override
+        public Optional<MenuView> findById(String id) {
+            return Optional.ofNullable(menus.get(id));
+        }
+    }
+
+    private static final class InMemoryDishApi implements DishApi {
+
+        private final Map<String, DishView> dishes = new HashMap<>();
+
+        @Override
+        public List<DishView> getByIds(Collection<String> ids) {
+            return ids.stream()
+                    .map(dishes::get)
+                    .flatMap(java.util.stream.Stream::ofNullable)
+                    .toList();
+        }
+    }
+}

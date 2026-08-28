@@ -13,6 +13,8 @@ docker/.env
 .springBeans
 .sts4-cache
 README_FOR_AI.md
+docs/modular-monolith-migration-roadmap.md
+docs/modular-monolith-migration-runtime.md
 
 ### IntelliJ IDEA ###
 .idea

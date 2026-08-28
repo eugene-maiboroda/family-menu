@@ -18,33 +18,37 @@ The intended first complete workflow is:
 
 ## Architecture
 
-The codebase follows a simplified Hexagonal Architecture:
+The codebase is organized as a feature-first modular monolith. It is one Spring Boot application and one Maven project, while business capabilities are separated by top-level Java packages:
 
 ```text
-Web adapters
-    ↓
-Input ports
-    ↓
-Application services
-    ↓
-Domain models
-    ↓
-Output ports
-    ↓
-Persistence and storage adapters
+com.familymenu.backend
+├── ingredient/
+├── dish/
+├── menu/
+├── shopping/
+├── infrastructure/
+└── bootstrap/
 ```
 
-The main packages are organized by responsibility:
+Each business module owns its use cases, domain model, persistence model, and HTTP boundary where applicable. Internal structure is added only when the module is complex enough to benefit from it:
 
-- `domain` contains business models and shopping-list calculation rules.
-- `application` coordinates dish, menu, and shopping-list use cases.
-- `port.in` defines capabilities exposed by the application layer.
-- `port.out` defines persistence and infrastructure dependencies.
-- `adapter.persistence` contains JPA repositories, entities, mappers, and persistence services.
-- `infrastructure` contains shared configuration and exception handling.
-- `bootstrap` contains startup configuration.
+- `ingredient` owns the canonical ingredient catalog and the `ingredients` table.
+- `dish` owns dishes, recipes, dish ingredients, HTTP endpoints, and the `dishes`/`dish_ingredients` tables.
+- `menu` owns menu composition and the `menus`/`menu_dishes` tables.
+- `shopping` owns shopping-list orchestration, unit conversion, and aggregation. Shopping lists are calculated and are not persisted.
+- `infrastructure` contains only application-wide technical configuration and bean conventions.
+- `bootstrap` contains startup behavior and typed configuration properties.
 
-Persistence entities remain inside the persistence adapter. Domain and application code work with domain models through ports rather than depending directly on JPA.
+Modules communicate through small in-process Java contracts:
+
+```text
+dish     → ingredient.api
+menu     → dish.api
+shopping → menu.api
+shopping → dish.api
+```
+
+A module must not access another module's domain, service, repository, entity, mapper, or web classes. Module API DTO, HTTP DTO, domain models, and JPA entities are separate representations. Local interfaces or ports are introduced only when replaceability or isolation provides a concrete benefit.
 
 ## Data model
 
@@ -120,7 +124,7 @@ When the web layer is available, API documentation will be exposed through the c
 
 - complete dish and menu use cases;
 - expose and validate the HTTP API;
-- finalize shopping-list aggregation and compatible unit conversion;
+- extend shopping-list behavior as product requirements grow;
 - add image upload through a replaceable storage adapter;
 - introduce Flyway database migrations;
 - add unit and integration test coverage;
