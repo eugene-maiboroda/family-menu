@@ -1,5 +1,6 @@
 package com.familymenu.backend.menu.service;
 
+import com.familymenu.backend.dish.api.dto.DishView;
 import com.familymenu.backend.menu.api.event.MenuDeletionRequested;
 
 import com.familymenu.backend.dish.api.DishApi;
@@ -37,7 +38,7 @@ public class MenuService implements MenuApi {
                 Instant.now(),
                 List.copyOf(menuCommand.dishIds())
         );
-        Menu savedMenu = menuPersistence.save(menu);
+        Menu savedMenu = menuPersistence.saveMenu(menu);
         eventPublisher.publishEvent(new MenuCreated(savedMenu.id()));
         return savedMenu;
     }
@@ -45,32 +46,32 @@ public class MenuService implements MenuApi {
     @Transactional
     public void updateMenu(Menu menu) {
         validateDishesExist(menu.dishIds());
-        menuPersistence.save(menu);
+        menuPersistence.saveMenu(menu);
     }
 
     @Transactional
     public void deleteMenu(String id) {
         eventPublisher.publishEvent(new MenuDeletionRequested(id));
-        menuPersistence.delete(id);
+        menuPersistence.deleteMenu(id);
     }
 
     public List<Menu> getMenus() {
-        return menuPersistence.findAll();
+        return menuPersistence.findAllMenus();
     }
 
     public Menu getMenu(String id) {
-        return menuPersistence.findById(id)
+        return menuPersistence.findMenuById(id)
                 .orElseThrow(() -> new MenuNotFoundException(id + " not found"));
     }
 
     @Override
     public Optional<MenuView> findById(String id) {
-        return menuPersistence.findById(id).map(this::toView);
+        return menuPersistence.findMenuById(id).map(this::toView);
     }
 
     private void validateDishesExist(List<String> dishIds) {
         HashSet<String> foundIds = dishApi.getByIds(dishIds).stream()
-                .map(view -> view.id())
+                .map(DishView::id)
                 .collect(java.util.stream.Collectors.toCollection(HashSet::new));
         List<String> missingIds = dishIds.stream()
                 .distinct()

@@ -23,7 +23,7 @@ public class DishController {
     @PostMapping({"", "/create"})
     @ResponseStatus(HttpStatus.CREATED)
     public DishResponse createDish(@RequestBody @Valid CreateDishRequest request) {
-      return dishAssembler.toDishResponse(dishService.createDish(dishAssembler.toDish(request)));
+        return dishAssembler.toDishResponse(dishService.createDish(dishAssembler.toDish(request)));
 
     }
 

@@ -10,6 +10,8 @@ public record ShoppingListItemResponse(
 
         BigDecimal amount,
 
-        String unit
+        String unit,
+
+        boolean purchased
 ) {
 }

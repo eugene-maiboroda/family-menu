@@ -21,7 +21,7 @@ public class DishPersistenceService {
     private final DishIngredientRepository dishIngredientRepository;
     private final DishIngredientPersistenceMapper dishIngredientMapper;
 
-    public void save(Dish dish) {
+    public void saveDish(Dish dish) {
         DishEntity entity = dishMapper.toEntity(dish);
         dishRepository.findById(dish.getId()).
                 ifPresent(existing -> entity.setCreatedAt(existing.getCreatedAt()));
@@ -31,17 +31,17 @@ public class DishPersistenceService {
         saveDishIngredients(dish.getId(), dish.getIngredients());
     }
 
-    public Optional<Dish> findById(String id) {
+    public Optional<Dish> findDishById(String id) {
         return dishRepository.findById(id)
                 .map(entity -> dishMapper.toDomain(entity, findDishIngredients(id)));
     }
 
-    public void deleteById(String id) {
+    public void deleteDishById(String id) {
         dishIngredientRepository.deleteAllByDishId(id);
         dishRepository.deleteById(id);
     }
 
-    public List<Dish> findAll() {
+    public List<Dish> findDishes() {
         return dishRepository.findAll().stream()
                 .map(entity -> dishMapper.toDomain(entity, findDishIngredients(entity.getId())))
                 .toList();

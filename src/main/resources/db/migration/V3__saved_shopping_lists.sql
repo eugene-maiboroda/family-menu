@@ -5,7 +5,8 @@ CREATE TABLE shopping_lists (
     version BIGINT NOT NULL DEFAULT 0,
     menu_ids JSONB NOT NULL DEFAULT '[]'::jsonb CHECK(jsonb_typeof(menu_ids) = 'array'),
     dish_ids JSONB NOT NULL DEFAULT '[]'::jsonb CHECK(jsonb_typeof(dish_ids) = 'array'),
-    manual_products JSONB NOT NULL DEFAULT '[]'::jsonb CHECK(jsonb_typeof(manual_products) = 'array')
+    manual_products JSONB NOT NULL DEFAULT '[]'::jsonb CHECK(jsonb_typeof(manual_products) = 'array'),
+    purchased_items JSONB NOT NULL DEFAULT '[]'::jsonb CHECK(jsonb_typeof(purchased_items) = 'array')
 );
 CREATE UNIQUE INDEX uq_shopping_lists_inbox ON shopping_lists(inbox) WHERE inbox;
 INSERT INTO shopping_lists(id, name, inbox) VALUES ('inbox', 'Inbox', TRUE);

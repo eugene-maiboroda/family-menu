@@ -5,8 +5,8 @@ import com.familymenu.backend.product.api.ProductApi;
 import com.familymenu.backend.shopping.service.exception.ShoppingDishNotFoundException;
 import com.familymenu.backend.shopping.service.exception.ShoppingProductNotFoundException;
 import com.familymenu.backend.menu.api.MenuApi;
-import com.familymenu.backend.menu.api.dto.MenuView;
 import com.familymenu.backend.shopping.domain.ShoppingListItem;
+import com.familymenu.backend.shopping.domain.PurchasedItem;
 import com.familymenu.backend.shopping.domain.Unit;
 import com.familymenu.backend.shopping.domain.ManualProductPurchase;
 import com.familymenu.backend.shopping.persistence.ShoppingListEntity;
@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -77,42 +78,48 @@ public class SavedShoppingListService {
         shoppingList.getMenuIds().clear();
         shoppingList.getDishIds().clear();
         shoppingList.getManualProducts().clear();
+        shoppingList.getPurchasedItems().clear();
         return saveShoppingList(shoppingList);
     }
 
     public SavedShoppingListView addMenuToShoppingList(String id, String menuId) {
         ShoppingListEntity shoppingList = findShoppingListOrThrow(id);
-        findMenuOrThrow(menuId);
+        List<ShoppingListItem> previousItems = calculateShoppingListItems(shoppingList);
+        validateMenuExists(menuId);
         if (!shoppingList.getMenuIds().contains(menuId)) {
             shoppingList.getMenuIds().add(menuId);
         }
-        return saveShoppingList(shoppingList);
+        return saveShoppingListAfterContentsChange(shoppingList, previousItems);
     }
 
     public SavedShoppingListView removeMenuFromShoppingList(String id, String menuId) {
         ShoppingListEntity shoppingList = findShoppingListOrThrow(id);
+        List<ShoppingListItem> previousItems = calculateShoppingListItems(shoppingList);
         shoppingList.getMenuIds().remove(menuId);
-        return saveShoppingList(shoppingList);
+        return saveShoppingListAfterContentsChange(shoppingList, previousItems);
     }
 
     public SavedShoppingListView addDishToShoppingList(String id, String dishId) {
         ShoppingListEntity shoppingList = findShoppingListOrThrow(id);
+        List<ShoppingListItem> previousItems = calculateShoppingListItems(shoppingList);
         validateDishExists(dishId);
 
         if (!shoppingList.getDishIds().contains(dishId)) {
             shoppingList.getDishIds().add(dishId);
         }
-        return saveShoppingList(shoppingList);
+        return saveShoppingListAfterContentsChange(shoppingList, previousItems);
     }
 
     public SavedShoppingListView removeDishFromShoppingList(String id, String dishId) {
         ShoppingListEntity shoppingList = findShoppingListOrThrow(id);
+        List<ShoppingListItem> previousItems = calculateShoppingListItems(shoppingList);
         shoppingList.getDishIds().remove(dishId);
-        return saveShoppingList(shoppingList);
+        return saveShoppingListAfterContentsChange(shoppingList, previousItems);
     }
 
     public SavedShoppingListView addProductToShoppingList(String id, AdditionalProduct product) {
         ShoppingListEntity shoppingList = findShoppingListOrThrow(id);
+        List<ShoppingListItem> previousItems = calculateShoppingListItems(shoppingList);
         Unit unit = validateManualProduct(product);
         ManualProductPurchase purchase = new ManualProductPurchase(
                 idGenerator.generate(),
@@ -121,11 +128,12 @@ public class SavedShoppingListService {
                 unit
         );
         shoppingList.getManualProducts().add(purchase);
-        return saveShoppingList(shoppingList);
+        return saveShoppingListAfterContentsChange(shoppingList, previousItems);
     }
 
     public SavedShoppingListView updateShoppingListProduct(String id, String itemId, AdditionalProduct product) {
         ShoppingListEntity shoppingList = findShoppingListOrThrow(id);
+        List<ShoppingListItem> previousItems = calculateShoppingListItems(shoppingList);
         ManualProductPurchase purchase = findManualPurchaseOrThrow(shoppingList, itemId);
         Unit unit = validateManualProduct(product);
         ManualProductPurchase updatedPurchase = new ManualProductPurchase(
@@ -136,14 +144,91 @@ public class SavedShoppingListService {
         );
         int purchaseIndex = shoppingList.getManualProducts().indexOf(purchase);
         shoppingList.getManualProducts().set(purchaseIndex, updatedPurchase);
-        return saveShoppingList(shoppingList);
+        return saveShoppingListAfterContentsChange(shoppingList, previousItems);
     }
 
     public SavedShoppingListView removeProductFromShoppingList(String id, String itemId) {
         ShoppingListEntity shoppingList = findShoppingListOrThrow(id);
+        List<ShoppingListItem> previousItems = calculateShoppingListItems(shoppingList);
         ManualProductPurchase purchase = findManualPurchaseOrThrow(shoppingList, itemId);
         shoppingList.getManualProducts().remove(purchase);
+        return saveShoppingListAfterContentsChange(shoppingList, previousItems);
+    }
+
+    public SavedShoppingListView updateShoppingListItemPurchaseStatus(
+            String id, String productId, Unit.Dimension dimension, boolean purchased
+    ) {
+        ShoppingListEntity shoppingList = findShoppingListOrThrow(id);
+        PurchasedItem purchasedItem = new PurchasedItem(productId, dimension);
+        boolean itemExists = calculateShoppingListItems(shoppingList).stream()
+                .anyMatch(purchasedItem::matches);
+
+        if (!itemExists) {
+            throw new ShoppingListNotFoundException(productId + "/" + dimension);
+        }
+
+        shoppingList.getPurchasedItems().remove(purchasedItem);
+        if (purchased) {
+            shoppingList.getPurchasedItems().add(purchasedItem);
+        }
         return saveShoppingList(shoppingList);
+    }
+
+    public SavedShoppingListView resetShoppingListPurchases(String id) {
+        ShoppingListEntity shoppingList = findShoppingListOrThrow(id);
+        shoppingList.getPurchasedItems().clear();
+        return saveShoppingList(shoppingList);
+    }
+
+    private SavedShoppingListView saveShoppingListAfterContentsChange(
+            ShoppingListEntity shoppingList, List<ShoppingListItem> previousItems
+    ) {
+        List<ShoppingListItem> currentItems = calculateShoppingListItems(shoppingList);
+        shoppingList.getPurchasedItems().removeIf(purchasedItem ->
+                !hasUnchangedAmount(purchasedItem, previousItems, currentItems));
+        return saveShoppingList(shoppingList);
+    }
+
+    private boolean hasUnchangedAmount(
+            PurchasedItem purchasedItem,
+            List<ShoppingListItem> previousItems,
+            List<ShoppingListItem> currentItems
+    ) {
+        ShoppingListItem previousItem = previousItems.stream()
+                .filter(purchasedItem::matches)
+                .findFirst()
+                .orElse(null);
+        ShoppingListItem currentItem = currentItems.stream()
+                .filter(purchasedItem::matches)
+                .findFirst()
+                .orElse(null);
+
+        if (previousItem == null || currentItem == null) {
+            return false;
+        }
+
+        BigDecimal previousAmount = previousItem.unit().toBase(previousItem.amount());
+        BigDecimal currentAmount = currentItem.unit().toBase(currentItem.amount());
+        return previousAmount.compareTo(currentAmount) == 0;
+    }
+
+    private List<ShoppingListItem> calculateShoppingListItems(ShoppingListEntity shoppingList) {
+        List<AdditionalProduct> manualProducts = shoppingList.getManualProducts().stream()
+                .map(this::toAdditionalProduct)
+                .toList();
+        return shoppingListService.calculateShoppingListWithMenus(
+                shoppingList.getMenuIds(),
+                shoppingList.getDishIds(),
+                manualProducts
+        );
+    }
+
+    private ShoppingListItem withPurchaseStatus(ShoppingListEntity shoppingList, ShoppingListItem item) {
+        PurchasedItem purchasedItem = new PurchasedItem(item.productId(), item.unit().dimension());
+        boolean purchased = shoppingList.getPurchasedItems().contains(purchasedItem);
+        return new ShoppingListItem(
+                item.productId(), item.productName(), item.amount(), item.unit(), purchased
+        );
     }
 
     private SavedShoppingListView saveShoppingList(ShoppingListEntity shoppingList) {
@@ -152,14 +237,9 @@ public class SavedShoppingListService {
     }
 
     private SavedShoppingListView toShoppingListView(ShoppingListEntity shoppingList) {
-        List<AdditionalProduct> manualProducts = shoppingList.getManualProducts().stream()
-                .map(this::toAdditionalProduct)
+        List<ShoppingListItem> shoppingItems = calculateShoppingListItems(shoppingList).stream()
+                .map(item -> withPurchaseStatus(shoppingList, item))
                 .toList();
-        List<ShoppingListItem> shoppingItems = shoppingListService.calculateShoppingListWithMenus(
-                shoppingList.getMenuIds(),
-                shoppingList.getDishIds(),
-                manualProducts
-        );
         List<ManualPurchaseView> manualPurchases = shoppingList.getManualProducts().stream()
                 .map(this::toManualPurchaseView)
                 .toList();
@@ -213,9 +293,10 @@ public class SavedShoppingListService {
                 .orElseThrow(() -> new ShoppingListNotFoundException(id));
     }
 
-    private MenuView findMenuOrThrow(String menuId) {
-        return menuApi.findById(menuId)
-                .orElseThrow(() -> new ShoppingMenuNotFoundException(menuId + " not found"));
+    private void validateMenuExists(String menuId) {
+        if (menuApi.findById(menuId).isEmpty()) {
+            throw new ShoppingMenuNotFoundException(menuId + " not found");
+        }
     }
 
     private ManualProductPurchase findManualPurchaseOrThrow(ShoppingListEntity shoppingList, String itemId) {

@@ -82,24 +82,24 @@ class MenuServiceTest {
         }
 
         @Override
-        public Menu save(Menu menu) {
+        public Menu saveMenu(Menu menu) {
             savedMenus.add(menu);
             menusById.put(menu.id(), menu);
             return menu;
         }
 
         @Override
-        public void delete(String id) {
+        public void deleteMenu(String id) {
             menusById.remove(id);
         }
 
         @Override
-        public Optional<Menu> findById(String id) {
+        public Optional<Menu> findMenuById(String id) {
             return Optional.ofNullable(menusById.get(id));
         }
 
         @Override
-        public List<Menu> findAll() {
+        public List<Menu> findAllMenus() {
             return List.copyOf(menusById.values());
         }
     }

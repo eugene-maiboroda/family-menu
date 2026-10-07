@@ -15,7 +15,7 @@ public class MenuPersistenceService {
     private final MenuRepository menuRepository;
     private final MenuDishRepository menuDishRepository;
 
-    public Menu save(Menu menu) {
+    public Menu saveMenu(Menu menu) {
         MenuEntity entity = new MenuEntity();
         entity.setId(menu.id());
         entity.setCreatedDate(menu.createdDate());
@@ -30,15 +30,15 @@ public class MenuPersistenceService {
         return new Menu(saved.getId(), saved.getCreatedDate(), List.copyOf(menu.dishIds()));
     }
 
-    public void delete(String id) {
+    public void deleteMenu(String id) {
         menuRepository.deleteById(id);
     }
 
-    public Optional<Menu> findById(String id) {
+    public Optional<Menu> findMenuById(String id) {
         return menuRepository.findById(id).map(this::toDomain);
     }
 
-    public List<Menu> findAll() {
+    public List<Menu> findAllMenus() {
         return menuRepository.findAll().stream()
                 .map(this::toDomain)
                 .toList();

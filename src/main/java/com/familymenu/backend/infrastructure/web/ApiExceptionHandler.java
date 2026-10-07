@@ -11,6 +11,7 @@ import com.familymenu.backend.shopping.service.exception.ShoppingListNotFoundExc
 import com.familymenu.backend.shopping.service.exception.ShoppingMenuNotFoundException;
 import com.familymenu.backend.shopping.service.exception.ShoppingProductNotFoundException;
 import com.familymenu.backend.shopping.service.exception.ShoppingSourceInUseException;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
@@ -46,7 +47,7 @@ public class ApiExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidationFailure(MethodArgumentNotValidException exception) {
         List<String> validationErrors = exception.getBindingResult().getAllErrors().stream()
-                .map(error -> error.getDefaultMessage())
+                .map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .toList();
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Invalid request");
         problem.setProperty("errors", validationErrors);

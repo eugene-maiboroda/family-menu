@@ -45,7 +45,7 @@ public class DishService implements DishApi {
                 .ingredients(resolvedIngredients)
                 .build();
 
-        dishPersistence.save(dishForSave);
+        dishPersistence.saveDish(dishForSave);
         return dishForSave;
     }
 
@@ -61,7 +61,7 @@ public class DishService implements DishApi {
                 .ingredients(resolveIngredients(changes.getIngredients()))
                 .build();
 
-        dishPersistence.save(updated);
+        dishPersistence.saveDish(updated);
 
         return updated;
     }
@@ -70,11 +70,11 @@ public class DishService implements DishApi {
     public void deleteDish(String id) {
         findOrThrow(id);
         eventPublisher.publishEvent(new DishDeletionRequested(id));
-        dishPersistence.deleteById(id);
+        dishPersistence.deleteDishById(id);
     }
 
     public List<Dish> listDishes() {
-        return dishPersistence.findAll().stream()
+        return dishPersistence.findDishes().stream()
                 .map(this::resolveProductReferences)
                 .toList();
     }
@@ -142,7 +142,7 @@ public class DishService implements DishApi {
     }
 
     private Optional<Dish> findById(String id) {
-        return dishPersistence.findById(id)
+        return dishPersistence.findDishById(id)
                 .map(this::resolveProductReferences);
     }
 

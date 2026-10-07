@@ -1,6 +1,7 @@
 package com.familymenu.backend.shopping.persistence;
 
 import com.familymenu.backend.shopping.domain.ManualProductPurchase;
+import com.familymenu.backend.shopping.domain.PurchasedItem;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -43,4 +44,7 @@ public class ShoppingListEntity {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "manual_products", columnDefinition = "jsonb", nullable = false)
     private List<ManualProductPurchase> manualProducts = new ArrayList<>();
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "purchased_items", columnDefinition = "jsonb", nullable = false)
+    private List<PurchasedItem> purchasedItems = new ArrayList<>();
 }

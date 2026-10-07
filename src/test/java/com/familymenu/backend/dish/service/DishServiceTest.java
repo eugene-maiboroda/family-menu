@@ -191,23 +191,23 @@ class DishServiceTest {
         }
 
         @Override
-        public void save(Dish dish) {
+        public void saveDish(Dish dish) {
             savedDishes.add(dish);
             dishesById.put(dish.getId(), dish);
         }
 
         @Override
-        public Optional<Dish> findById(String id) {
+        public Optional<Dish> findDishById(String id) {
             return Optional.ofNullable(dishesById.get(id));
         }
 
         @Override
-        public void deleteById(String id) {
+        public void deleteDishById(String id) {
             dishesById.remove(id);
         }
 
         @Override
-        public List<Dish> findAll() {
+        public List<Dish> findDishes() {
             return List.copyOf(dishesById.values());
         }
     }

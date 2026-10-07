@@ -13,6 +13,11 @@ public record ShoppingListItem(
 
         BigDecimal amount,
 
-        Unit unit
+        Unit unit,
+
+        boolean purchased
 ) {
+    public ShoppingListItem(String productId, String productName, BigDecimal amount, Unit unit) {
+        this(productId, productName, amount, unit, false);
+    }
 }

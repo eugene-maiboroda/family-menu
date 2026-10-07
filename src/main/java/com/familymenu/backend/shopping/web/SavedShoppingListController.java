@@ -1,6 +1,8 @@
 package com.familymenu.backend.shopping.web;
 
 import com.familymenu.backend.shopping.service.SavedShoppingListService;
+import com.familymenu.backend.shopping.domain.Unit;
+import com.familymenu.backend.shopping.web.dto.ShoppingListItemPurchaseRequest;
 import com.familymenu.backend.shopping.service.dto.AdditionalProduct;
 import com.familymenu.backend.shopping.service.dto.SavedShoppingListView;
 import com.familymenu.backend.shopping.web.dto.ShoppingListNameRequest;
@@ -102,6 +104,23 @@ public class SavedShoppingListController {
     @DeleteMapping("/{id}/products/{itemId}")
     public SavedShoppingListView removeProductFromShoppingList(@PathVariable String id, @PathVariable String itemId) {
         return shoppingListService.removeProductFromShoppingList(id, itemId);
+    }
+
+    @PutMapping("/{id}/items/{productId}/{dimension}/purchase-status")
+    public SavedShoppingListView updateShoppingListItemPurchaseStatus(
+            @PathVariable String id,
+            @PathVariable String productId,
+            @PathVariable Unit.Dimension dimension,
+            @Valid @RequestBody ShoppingListItemPurchaseRequest request
+    ) {
+        return shoppingListService.updateShoppingListItemPurchaseStatus(
+                id, productId, dimension, request.purchased()
+        );
+    }
+
+    @DeleteMapping("/{id}/purchase-status")
+    public SavedShoppingListView resetShoppingListPurchases(@PathVariable String id) {
+        return shoppingListService.resetShoppingListPurchases(id);
     }
 
     private AdditionalProduct toAdditionalProduct(ShoppingListProductRequest request) {
