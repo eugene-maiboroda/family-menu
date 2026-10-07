@@ -20,9 +20,9 @@ public class AppRunner implements ApplicationRunner {
     public void run(@NonNull ApplicationArguments args) {
         log.info("Swagger UI available at {}", String.format(
                 URL_TEMPLATE,
-                serverProperties.getHost(),
-                serverProperties.getPort(),
-                serverProperties.getServlet().getContextPath()
+                serverProperties.host(),
+                serverProperties.port(),
+                serverProperties.servlet().contextPath()
         ));
     }
 }
