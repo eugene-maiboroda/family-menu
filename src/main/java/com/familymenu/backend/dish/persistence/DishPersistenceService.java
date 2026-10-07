@@ -2,7 +2,7 @@ package com.familymenu.backend.dish.persistence;
 
 import com.familymenu.backend.dish.domain.Dish;
 import com.familymenu.backend.dish.domain.DishIngredient;
-import com.familymenu.backend.dish.domain.IngredientReference;
+import com.familymenu.backend.dish.domain.ProductReference;
 import com.familymenu.backend.dish.persistence.mapper.DishIngredientPersistenceMapper;
 import com.familymenu.backend.dish.persistence.mapper.DishPersistenceMapper;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,12 @@ public class DishPersistenceService {
     private final DishIngredientPersistenceMapper dishIngredientMapper;
 
     public void save(Dish dish) {
-        dishRepository.save(dishMapper.toEntity(dish));
+        DishEntity entity = dishMapper.toEntity(dish);
+        dishRepository.findById(dish.getId()).
+                ifPresent(existing -> entity.setCreatedAt(existing.getCreatedAt()));
+        dishRepository.save(entity);
+        dishIngredientRepository.deleteAllByDishId(dish.getId());
+        dishIngredientRepository.flush();
         saveDishIngredients(dish.getId(), dish.getIngredients());
     }
 
@@ -53,8 +58,7 @@ public class DishPersistenceService {
     private List<DishIngredient> findDishIngredients(String dishId) {
         return dishIngredientRepository.findAllByDishId(dishId).stream()
                 .map(entity -> dishIngredientMapper.toDomain(
-                        entity,
-                        new IngredientReference(entity.getIngredientId(), null)
+                        entity, new ProductReference(entity.getProductId(), null)
                 ))
                 .toList();
     }

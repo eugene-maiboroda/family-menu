@@ -19,7 +19,7 @@ CREATE TABLE dishes (
 -- INGREDIENTS
 -- =====================================================
 
-CREATE TABLE ingredients (
+CREATE TABLE products (
                              id VARCHAR(36) PRIMARY KEY,
                              name VARCHAR(255) NOT NULL UNIQUE,
 
@@ -33,11 +33,11 @@ CREATE TABLE ingredients (
 -- зв'язок Dish <-> Ingredient
 -- =====================================================
 
-CREATE TABLE dish_ingredients (
+CREATE TABLE dish_products (
                                   id VARCHAR(36) PRIMARY KEY,
 
                                   dish_id VARCHAR(36) NOT NULL,
-                                  ingredient_id VARCHAR(36) NOT NULL,
+                                  product_id VARCHAR(36) NOT NULL,
 
                                   amount NUMERIC(10, 2) NOT NULL,
                                   unit VARCHAR(50) NOT NULL,
@@ -51,11 +51,11 @@ CREATE TABLE dish_ingredients (
                                           ON DELETE CASCADE,
 
                                   CONSTRAINT fk_dish_ingredients_ingredient
-                                      FOREIGN KEY (ingredient_id)
-                                          REFERENCES ingredients(id),
+                                      FOREIGN KEY (product_id)
+                                          REFERENCES products(id),
 
                                   CONSTRAINT uq_dish_ingredient
-                                      UNIQUE (dish_id, ingredient_id),
+                                      UNIQUE (dish_id, product_id),
 
                                   CONSTRAINT chk_dish_ingredient_amount
                                       CHECK (amount > 0)
@@ -99,3 +99,17 @@ CREATE TABLE menu_dishes (
                              CONSTRAINT uq_menu_dish
                                  UNIQUE (menu_id, dish_id)
 );
+CREATE UNIQUE INDEX uq_products_normalized_name ON products (lower(name));
+
+-- Shopping lists own their menu, dish and manual-product sources as JSONB.
+CREATE TABLE shopping_lists (
+    id VARCHAR(36) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    inbox BOOLEAN NOT NULL DEFAULT FALSE,
+    version BIGINT NOT NULL DEFAULT 0,
+    menu_ids JSONB NOT NULL DEFAULT '[]'::jsonb CHECK(jsonb_typeof(menu_ids) = 'array'),
+    dish_ids JSONB NOT NULL DEFAULT '[]'::jsonb CHECK(jsonb_typeof(dish_ids) = 'array'),
+    manual_products JSONB NOT NULL DEFAULT '[]'::jsonb CHECK(jsonb_typeof(manual_products) = 'array')
+);
+CREATE UNIQUE INDEX uq_shopping_lists_inbox ON shopping_lists(inbox) WHERE inbox;
+INSERT INTO shopping_lists(id, name, inbox) VALUES ('inbox', 'Inbox', TRUE);

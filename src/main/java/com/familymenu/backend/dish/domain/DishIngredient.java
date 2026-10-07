@@ -10,7 +10,7 @@ public record DishIngredient(
 
         String id,
 
-        IngredientReference ingredient,
+        ProductReference product,
 
         BigDecimal amount,
 
@@ -19,7 +19,7 @@ public record DishIngredient(
 
     public DishIngredient {
 
-        Objects.requireNonNull(ingredient, "Ingredient must not be null");
+        Objects.requireNonNull(product, "Ingredient must not be null");
         Objects.requireNonNull(amount, "Amount must not be null");
         Objects.requireNonNull(unit, "Unit must not be null");
 

@@ -22,7 +22,7 @@ The codebase is organized as a feature-first modular monolith. It is one Spring 
 
 ```text
 com.familymenu.backend
-├── ingredient/
+├── product/
 ├── dish/
 ├── menu/
 ├── shopping/
@@ -32,17 +32,17 @@ com.familymenu.backend
 
 Each business module owns its use cases, domain model, persistence model, and HTTP boundary where applicable. Internal structure is added only when the module is complex enough to benefit from it:
 
-- `ingredient` owns the canonical ingredient catalog and the `ingredients` table.
+- `product` owns the canonical ingredient catalog and the `products` table.
 - `dish` owns dishes, recipes, dish ingredients, HTTP endpoints, and the `dishes`/`dish_ingredients` tables.
 - `menu` owns menu composition and the `menus`/`menu_dishes` tables.
-- `shopping` owns shopping-list orchestration, unit conversion, and aggregation. Shopping lists are calculated and are not persisted.
+- `shopping` owns shopping-list orchestration, unit conversion, and aggregation. Shopping lists persist their menu, dish and manual-product sources and calculate totals on read.
 - `infrastructure` contains only application-wide technical configuration and bean conventions.
 - `bootstrap` contains startup behavior and typed configuration properties.
 
 Modules communicate through small in-process Java contracts:
 
 ```text
-dish     → ingredient.api
+dish     → product.api
 menu     → dish.api
 shopping → menu.api
 shopping → dish.api
@@ -130,3 +130,7 @@ When the web layer is available, API documentation will be exposed through the c
 - add unit and integration test coverage;
 - document the API with OpenAPI;
 - add continuous integration checks.
+
+## Current mobile MVP API
+
+The canonical catalog is now `Product` (`/products`) and supports food and household goods. Dish ingredients reference products. Saved shopping lists support an automatic Inbox, named lists, selected menus, dishes and manual purchases. GET returns calculated totals. See [saved shopping lists](docs/saved-shopping-lists-api.md). See [the API and migration guide](docs/mobile-mvp-api.md) for payloads, existing-database upgrades, test setup, and phone connectivity.

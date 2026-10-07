@@ -1,5 +1,7 @@
 package com.familymenu.backend.menu.service;
 
+import com.familymenu.backend.menu.api.dto.MenuView;
+
 import com.familymenu.backend.dish.api.DishApi;
 import com.familymenu.backend.dish.api.dto.DishView;
 import com.familymenu.backend.menu.domain.Menu;
@@ -28,7 +30,7 @@ class MenuServiceTest {
     void setUp() {
         menuPersistence = new InMemoryMenuPersistence();
         dishApi = new InMemoryDishApi();
-        menuService = new MenuService(menuPersistence, dishApi);
+        menuService = new MenuService(menuPersistence, dishApi, event -> {});
     }
 
     @Test
@@ -61,7 +63,7 @@ class MenuServiceTest {
         Menu menu = new Menu("menu-1", java.time.Instant.parse("2026-08-28T09:00:00Z"), List.of("dish-1"));
         menuPersistence.menusById.put(menu.id(), menu);
 
-        var result = menuService.findById("menu-1");
+        Optional<MenuView> result = menuService.findById("menu-1");
 
         assertThat(result).hasValueSatisfying(view -> {
             assertThat(view.id()).isEqualTo("menu-1");

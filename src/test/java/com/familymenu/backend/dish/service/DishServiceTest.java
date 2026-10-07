@@ -4,12 +4,12 @@ import com.familymenu.backend.dish.api.dto.DishView;
 import com.familymenu.backend.dish.domain.Dish;
 import com.familymenu.backend.dish.domain.DishCategory;
 import com.familymenu.backend.dish.domain.DishIngredient;
-import com.familymenu.backend.dish.domain.IngredientReference;
+import com.familymenu.backend.dish.domain.ProductReference;
 import com.familymenu.backend.dish.domain.RecipeStep;
 import com.familymenu.backend.dish.domain.Unit;
 import com.familymenu.backend.dish.persistence.DishPersistenceService;
-import com.familymenu.backend.ingredient.api.IngredientApi;
-import com.familymenu.backend.ingredient.api.dto.IngredientView;
+import com.familymenu.backend.product.api.ProductApi;
+import com.familymenu.backend.product.api.dto.ProductView;
 import com.familymenu.backend.shared.IdGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DishServiceTest {
 
     private InMemoryDishPersistence dishPersistence;
-    private InMemoryIngredientApi ingredientApi;
+    private InMemoryProductApi productApi;
     private DishService dishService;
     private final IdGenerator idGenerator = new IdGenerator() {
         private int counter = 0;
@@ -41,17 +41,17 @@ class DishServiceTest {
     @BeforeEach
     void setUp() {
         dishPersistence = new InMemoryDishPersistence();
-        ingredientApi = new InMemoryIngredientApi();
-        dishService = new DishService(dishPersistence, ingredientApi, idGenerator);
+        productApi = new InMemoryProductApi();
+        dishService = new DishService(dishPersistence, productApi, idGenerator, event -> {});
     }
 
     @Test
     void createDishReusesCanonicalIngredientAndAssignsDishAndRelationIds() {
-        IngredientView canonicalTomato = new IngredientView("ingredient-1", "Tomato");
-        ingredientApi.ingredientsByName.put("Tomato", canonicalTomato);
+        ProductView canonicalTomato = new ProductView("ingredient-1", "Tomato");
+        productApi.ingredientsByName.put("Tomato", canonicalTomato);
         Dish dish = dishWithoutId(
                 "Pasta",
-                List.of(new DishIngredient(null, new IngredientReference(null, "Tomato"), new BigDecimal("500"), Unit.G))
+                List.of(new DishIngredient(null, new ProductReference(null, "Tomato"), new BigDecimal("500"), Unit.G))
         );
 
         dishService.createDish(dish);
@@ -60,39 +60,39 @@ class DishServiceTest {
         assertThat(savedDish.getId()).isNotBlank();
         assertThat(savedDish.getIngredients()).singleElement().satisfies(ingredient -> {
             assertThat(ingredient.id()).isNotBlank();
-            assertThat(ingredient.ingredient())
-                    .isEqualTo(new IngredientReference(canonicalTomato.id(), canonicalTomato.name()));
+            assertThat(ingredient.product())
+                    .isEqualTo(new ProductReference(canonicalTomato.id(), canonicalTomato.name()));
             assertThat(ingredient.amount()).isEqualByComparingTo("500");
             assertThat(ingredient.unit()).isEqualTo(Unit.G);
         });
-        assertThat(ingredientApi.createCalls).isZero();
+        assertThat(productApi.createCalls).isZero();
     }
 
     @Test
     void createDishCreatesCanonicalIngredientWhenItDoesNotExist() {
         Dish dish = dishWithoutId(
                 "Salad",
-                List.of(new DishIngredient(null, new IngredientReference(null, "Cucumber"), new BigDecimal("2"), Unit.PCS))
+                List.of(new DishIngredient(null, new ProductReference(null, "Cucumber"), new BigDecimal("2"), Unit.PCS))
         );
 
         dishService.createDish(dish);
 
-        assertThat(ingredientApi.createCalls).isOne();
-        assertThat(ingredientApi.ingredientsByName.get("Cucumber"))
-                .isEqualTo(new IngredientView("ingredient-1", "Cucumber"));
+        assertThat(productApi.createCalls).isOne();
+        assertThat(productApi.ingredientsByName.get("Cucumber"))
+                .isEqualTo(new ProductView("ingredient-1", "Cucumber"));
         assertThat(dishPersistence.savedDishes.getFirst().getIngredients()).singleElement().satisfies(ingredient -> {
             assertThat(ingredient.id()).isNotBlank();
-            assertThat(ingredient.ingredient()).isEqualTo(new IngredientReference("ingredient-1", "Cucumber"));
+            assertThat(ingredient.product()).isEqualTo(new ProductReference("ingredient-1", "Cucumber"));
             assertThat(ingredient.amount()).isEqualByComparingTo("2");
             assertThat(ingredient.unit()).isEqualTo(Unit.PCS);
         });
     }
 
     @Test
-    void updateDishChangesEditableFieldsButKeepsExistingIngredients() {
+    void updateDishReplacesIngredients() {
         DishIngredient existingIngredient = new DishIngredient(
                 "dish-ingredient-1",
-                new IngredientReference("ingredient-1", "Tomato"),
+                new ProductReference("ingredient-1", "Tomato"),
                 new BigDecimal("500"),
                 Unit.G
         );
@@ -108,18 +108,32 @@ class DishServiceTest {
                 .name("New name")
                 .category(DishCategory.DINNER)
                 .recipeSteps(List.of(new RecipeStep("New step", "image-key")))
-                .ingredients(List.of())
+                .ingredients(List.of(new DishIngredient(null, new ProductReference(null, "Cucumber"), new BigDecimal("2"), Unit.PCS)))
                 .build();
         dishPersistence.dishesById.put("dish-1", existing);
-        ingredientApi.ingredientsByName.put("Tomato", new IngredientView("ingredient-1", "Tomato"));
+        productApi.ingredientsByName.put("Tomato", new ProductView("ingredient-1", "Tomato"));
 
         Dish updated = dishService.updateDish(changes);
 
         assertThat(updated.getName()).isEqualTo("New name");
         assertThat(updated.getCategory()).isEqualTo(DishCategory.DINNER);
         assertThat(updated.getRecipeSteps()).containsExactly(new RecipeStep("New step", "image-key"));
-        assertThat(updated.getIngredients()).containsExactly(existingIngredient);
+        assertThat(updated.getIngredients()).singleElement().satisfies(i -> {
+            assertThat(i.product().name()).isEqualTo("Cucumber");
+            assertThat(i.amount()).isEqualByComparingTo("2");
+        });
         assertThat(dishPersistence.savedDishes).containsExactly(updated);
+    }
+
+    @Test
+    void rejectsMissingProductReference() {
+        Dish dish = dishWithoutId("Salad", List.of(new DishIngredient(
+                null, new ProductReference("missing-product", null), new BigDecimal("1"), Unit.PCS)));
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> dishService.createDish(dish))
+                .isInstanceOf(DishProductNotFoundException.class)
+                .hasMessage("Product not found: missing-product");
+        assertThat(dishPersistence.savedDishes).isEmpty();
     }
 
     @Test
@@ -130,7 +144,7 @@ class DishServiceTest {
                 .category(DishCategory.DINNER)
                 .ingredients(List.of(new DishIngredient(
                         "dish-ingredient-1",
-                        new IngredientReference("ingredient-1", "Tomato"),
+                        new ProductReference("ingredient-1", "Tomato"),
                         new BigDecimal("500"),
                         Unit.G
                 )))
@@ -138,7 +152,7 @@ class DishServiceTest {
                 .build();
 
         dishPersistence.dishesById.put(dish.getId(), dish);
-        ingredientApi.ingredientsByName.put("Tomato", new IngredientView("ingredient-1", "Tomato"));
+        productApi.ingredientsByName.put("Tomato", new ProductView("ingredient-1", "Tomato"));
 
         List<DishView> views = dishService.getByIds(List.of("dish-1", "missing-dish"));
 
@@ -146,8 +160,8 @@ class DishServiceTest {
             assertThat(view.id()).isEqualTo("dish-1");
             assertThat(view.category()).isEqualTo("DINNER");
             assertThat(view.ingredients()).singleElement().satisfies(ingredient -> {
-                assertThat(ingredient.ingredientId()).isEqualTo("ingredient-1");
-                assertThat(ingredient.ingredientName()).isEqualTo("Tomato");
+                assertThat(ingredient.productId()).isEqualTo("ingredient-1");
+                assertThat(ingredient.productName()).isEqualTo("Tomato");
                 assertThat(ingredient.amount()).isEqualByComparingTo("500");
                 assertThat(ingredient.unit()).isEqualTo("G");
             });
@@ -198,26 +212,34 @@ class DishServiceTest {
         }
     }
 
-    private static final class InMemoryIngredientApi implements IngredientApi {
+    private static final class InMemoryProductApi implements ProductApi {
 
-        private final Map<String, IngredientView> ingredientsByName = new HashMap<>();
+        @Override
+        public Optional<ProductView> findById(String id) {
+            return ingredientsByName.values().stream()
+                    .filter(product -> product.id().equals(id))
+                    .findFirst();
+        }
+
+
+        private final Map<String, ProductView> ingredientsByName = new HashMap<>();
         private int createCalls;
 
         @Override
-        public IngredientView resolveByName(String name) {
-            IngredientView existing = ingredientsByName.get(name);
+        public ProductView resolveByName(String name) {
+            ProductView existing = ingredientsByName.get(name);
             if (existing != null) {
                 return existing;
             }
 
             createCalls++;
-            IngredientView created = new IngredientView("ingredient-" + createCalls, name);
+            ProductView created = new ProductView("ingredient-" + createCalls, name);
             ingredientsByName.put(name, created);
             return created;
         }
 
         @Override
-        public List<IngredientView> getByIds(java.util.Collection<String> ids) {
+        public List<ProductView> getByIds(java.util.Collection<String> ids) {
             return ingredientsByName.values().stream()
                     .filter(ingredient -> ids.contains(ingredient.id()))
                     .toList();

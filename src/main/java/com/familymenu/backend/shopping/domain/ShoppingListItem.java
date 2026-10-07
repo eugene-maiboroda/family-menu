@@ -7,9 +7,9 @@ import java.math.BigDecimal;
 @Builder
 public record ShoppingListItem(
 
-        String ingredientId,
+        String productId,
 
-        String ingredientName,
+        String productName,
 
         BigDecimal amount,
 

@@ -1,4 +1,4 @@
-package com.familymenu.backend.ingredient.persistence;
+package com.familymenu.backend.product.persistence;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -16,10 +16,10 @@ import java.time.Instant;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "ingredients", uniqueConstraints = {
+@Table(name = "products", uniqueConstraints = {
         @UniqueConstraint(columnNames = "name")
 })
-public class IngredientEntity {
+public class ProductEntity {
 
     @Id
     private String id;

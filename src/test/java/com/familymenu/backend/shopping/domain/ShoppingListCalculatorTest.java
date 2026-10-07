@@ -13,7 +13,7 @@ class ShoppingListCalculatorTest {
 
     @Test
     void aggregatesMassAndDisplaysKilogramsFromOneThousandGrams() {
-        List<ShoppingListItem> result = calculator.calculate(List.of(
+        List<ShoppingListItem> result = calculator.calculateShoppingList(List.of(
                 ingredient("tomato", "Tomato", "500", Unit.G),
                 ingredient("tomato", "Tomato", "0.7", Unit.KG)
         ));
@@ -23,7 +23,7 @@ class ShoppingListCalculatorTest {
 
     @Test
     void keepsMassAndVolumeBelowThresholdInBaseUnits() {
-        List<ShoppingListItem> result = calculator.calculate(List.of(
+        List<ShoppingListItem> result = calculator.calculateShoppingList(List.of(
                 ingredient("milk", "Milk", "500", Unit.ML),
                 ingredient("milk", "Milk", "0.25", Unit.L),
                 ingredient("flour", "Flour", "250", Unit.G)
@@ -37,7 +37,7 @@ class ShoppingListCalculatorTest {
 
     @Test
     void displaysLitersAndRemovesTrailingZeros() {
-        List<ShoppingListItem> result = calculator.calculate(List.of(
+        List<ShoppingListItem> result = calculator.calculateShoppingList(List.of(
                 ingredient("milk", "Milk", "1", Unit.L),
                 ingredient("milk", "Milk", "200", Unit.ML)
         ));
@@ -48,7 +48,7 @@ class ShoppingListCalculatorTest {
 
     @Test
     void neverMixesIncompatibleDimensionsForTheSameIngredient() {
-        List<ShoppingListItem> result = calculator.calculate(List.of(
+        List<ShoppingListItem> result = calculator.calculateShoppingList(List.of(
                 ingredient("lemon", "Lemon", "2", Unit.PCS),
                 ingredient("lemon", "Lemon", "100", Unit.ML),
                 ingredient("lemon", "Lemon", "0.2", Unit.L)
@@ -62,7 +62,7 @@ class ShoppingListCalculatorTest {
 
     @Test
     void keepsWholeCountInPlainDecimalNotation() {
-        List<ShoppingListItem> result = calculator.calculate(List.of(
+        List<ShoppingListItem> result = calculator.calculateShoppingList(List.of(
                 ingredient("egg", "Egg", "1000", Unit.PCS)
         ));
 

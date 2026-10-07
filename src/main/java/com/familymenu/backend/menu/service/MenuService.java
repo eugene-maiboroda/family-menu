@@ -1,7 +1,11 @@
 package com.familymenu.backend.menu.service;
 
+import com.familymenu.backend.menu.api.event.MenuDeletionRequested;
+
 import com.familymenu.backend.dish.api.DishApi;
 import com.familymenu.backend.menu.api.MenuApi;
+import com.familymenu.backend.menu.api.event.MenuCreated;
+import org.springframework.context.ApplicationEventPublisher;
 import com.familymenu.backend.menu.api.dto.MenuView;
 import com.familymenu.backend.menu.domain.Menu;
 import com.familymenu.backend.menu.persistence.MenuPersistenceService;
@@ -23,6 +27,7 @@ public class MenuService implements MenuApi {
 
     private final MenuPersistenceService menuPersistence;
     private final DishApi dishApi;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public Menu createMenu(CreateMenuCommand menuCommand) {
@@ -32,7 +37,9 @@ public class MenuService implements MenuApi {
                 Instant.now(),
                 List.copyOf(menuCommand.dishIds())
         );
-        return menuPersistence.save(menu);
+        Menu savedMenu = menuPersistence.save(menu);
+        eventPublisher.publishEvent(new MenuCreated(savedMenu.id()));
+        return savedMenu;
     }
 
     @Transactional
@@ -43,6 +50,7 @@ public class MenuService implements MenuApi {
 
     @Transactional
     public void deleteMenu(String id) {
+        eventPublisher.publishEvent(new MenuDeletionRequested(id));
         menuPersistence.delete(id);
     }
 

@@ -22,7 +22,7 @@ public class DishIngredientEntity {
 
     private String dishId;
 
-    private String ingredientId;
+    private String productId;
 
     private BigDecimal amount;
 

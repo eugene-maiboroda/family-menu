@@ -16,11 +16,9 @@ public record CreateDishRequest(
         String category,
 
         @NotEmpty
-        @Valid
-        List<IngredientRequest> ingredients,
+        List<@NotNull @Valid IngredientRequest> ingredients,
 
-        @Valid
-        List<RecipeStepRequest> recipeSteps
+        List<@NotNull @Valid RecipeStepRequest> recipeSteps
 ) {
 
 }

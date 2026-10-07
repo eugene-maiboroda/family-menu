@@ -1,26 +1,29 @@
 package com.familymenu.backend.dish.service;
 
+import com.familymenu.backend.dish.api.event.DishDeletionRequested;
+
 import com.familymenu.backend.dish.api.DishApi;
 import com.familymenu.backend.dish.api.dto.DishIngredientView;
 import com.familymenu.backend.dish.api.dto.DishView;
 import com.familymenu.backend.dish.api.dto.RecipeStepView;
 import com.familymenu.backend.dish.domain.Dish;
 import com.familymenu.backend.dish.domain.DishIngredient;
-import com.familymenu.backend.dish.domain.IngredientReference;
-import com.familymenu.backend.dish.domain.RecipeStep;
+import com.familymenu.backend.dish.domain.ProductReference;
 import com.familymenu.backend.dish.persistence.DishPersistenceService;
-import com.familymenu.backend.ingredient.api.IngredientApi;
-import com.familymenu.backend.ingredient.api.dto.IngredientView;
+import com.familymenu.backend.product.api.ProductApi;
+import com.familymenu.backend.product.api.dto.ProductView;
 import com.familymenu.backend.shared.IdGenerator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
 
-import java.util.List;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,21 +31,22 @@ import java.util.stream.Collectors;
 public class DishService implements DishApi {
 
     private final DishPersistenceService dishPersistence;
-    private final IngredientApi ingredientApi;
+    private final ProductApi productApi;
     private final IdGenerator idGenerator;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
-    public void createDish(Dish dish) {
-        List<DishIngredient> resolvedIngredients = dish.getIngredients().stream()
-                .map(this::resolveIngredient)
-                .toList();
+    public Dish createDish(Dish dish) {
+        List<DishIngredient> resolvedIngredients = resolveIngredients(dish.getIngredients());
 
         Dish dishForSave = dish.toBuilder()
                 .id(idGenerator.generate())
+                .recipeSteps(dish.getRecipeSteps() == null ? List.of() : dish.getRecipeSteps())
                 .ingredients(resolvedIngredients)
                 .build();
 
         dishPersistence.save(dishForSave);
+        return dishForSave;
     }
 
     @Transactional
@@ -53,7 +57,8 @@ public class DishService implements DishApi {
         Dish updated = existing.toBuilder()
                 .name(changes.getName())
                 .category(changes.getCategory())
-                .recipeSteps(changes.getRecipeSteps())
+                .recipeSteps(changes.getRecipeSteps() == null ? List.of() : changes.getRecipeSteps())
+                .ingredients(resolveIngredients(changes.getIngredients()))
                 .build();
 
         dishPersistence.save(updated);
@@ -63,12 +68,14 @@ public class DishService implements DishApi {
 
     @Transactional
     public void deleteDish(String id) {
+        findOrThrow(id);
+        eventPublisher.publishEvent(new DishDeletionRequested(id));
         dishPersistence.deleteById(id);
     }
 
     public List<Dish> listDishes() {
         return dishPersistence.findAll().stream()
-                .map(this::resolveIngredientReferences)
+                .map(this::resolveProductReferences)
                 .toList();
     }
 
@@ -85,13 +92,48 @@ public class DishService implements DishApi {
                 .toList();
     }
 
-    private DishIngredient resolveIngredient(DishIngredient dishIngredient) {
-        IngredientView ingredient = ingredientApi.resolveByName(dishIngredient.ingredient().name());
+    private List<DishIngredient> resolveIngredients(List<DishIngredient> ingredients) {
+        if (ingredients == null || ingredients.isEmpty()) {
+            throw new IllegalArgumentException("Dish needs ingredients");
+        }
 
-        return dishIngredient.toBuilder()
-                .id(UUID.randomUUID().toString())
-                .ingredient(new IngredientReference(ingredient.id(), ingredient.name()))
+        List<DishIngredient> resolvedIngredients = ingredients.stream()
+                .map(this::resolveIngredient)
+                .toList();
+
+        validateUniqueProducts(resolvedIngredients);
+        return resolvedIngredients;
+    }
+
+    private void validateUniqueProducts(List<DishIngredient> ingredients) {
+        Set<String> productIds = new HashSet<>();
+
+        for (DishIngredient ingredient : ingredients) {
+            String productId = ingredient.product().id();
+            if (!productIds.add(productId)) {
+                throw new IllegalArgumentException("Product occurs more than once in the dish: " + productId);
+            }
+        }
+    }
+
+    private DishIngredient resolveIngredient(DishIngredient ingredient) {
+        ProductView product = resolveProduct(ingredient.product());
+        ProductReference productReference = new ProductReference(product.id(), product.name());
+
+        return ingredient.toBuilder()
+                .id(idGenerator.generate())
+                .product(productReference)
                 .build();
+    }
+
+    private ProductView resolveProduct(ProductReference reference) {
+        String productId = reference.id();
+        if (productId == null) {
+            return productApi.resolveByName(reference.name());
+        }
+
+        return productApi.findById(productId)
+                .orElseThrow(() -> new DishProductNotFoundException(productId));
     }
 
     private Dish findOrThrow(String id) {
@@ -101,24 +143,24 @@ public class DishService implements DishApi {
 
     private Optional<Dish> findById(String id) {
         return dishPersistence.findById(id)
-                .map(this::resolveIngredientReferences);
+                .map(this::resolveProductReferences);
     }
 
-    private Dish resolveIngredientReferences(Dish dish) {
-        List<String> ingredientIds = dish.getIngredients().stream()
-                .map(ingredient -> ingredient.ingredient().id())
+    private Dish resolveProductReferences(Dish dish) {
+        List<String> productIds = dish.getIngredients().stream()
+                .map(ingredient -> ingredient.product().id())
                 .distinct()
                 .toList();
 
-        Map<String, IngredientReference> ingredientsById = ingredientApi.getByIds(ingredientIds).stream()
+        Map<String, ProductReference> productsById = productApi.getByIds(productIds).stream()
                 .collect(Collectors.toMap(
-                        IngredientView::id,
-                        ingredient -> new IngredientReference(ingredient.id(), ingredient.name())
+                        ProductView::id,
+                        product -> new ProductReference(product.id(), product.name())
                 ));
 
         List<DishIngredient> resolvedIngredients = dish.getIngredients().stream()
                 .map(ingredient -> ingredient.toBuilder()
-                        .ingredient(requireIngredient(ingredientsById, ingredient.ingredient().id()))
+                        .product(requireProductReference(productsById, ingredient.product().id()))
                         .build())
                 .toList();
 
@@ -127,19 +169,19 @@ public class DishService implements DishApi {
                 .build();
     }
 
-    private IngredientReference requireIngredient(Map<String, IngredientReference> ingredientsById, String ingredientId) {
-        IngredientReference ingredient = ingredientsById.get(ingredientId);
-        if (ingredient == null) {
+    private ProductReference requireProductReference(Map<String, ProductReference> productsById, String productId) {
+        ProductReference product = productsById.get(productId);
+        if (product == null) {
             throw new IllegalStateException(
-                    "Ingredient %s referenced by dish ingredient was not found".formatted(ingredientId)
+                    "Product %s referenced by dish ingredient was not found".formatted(productId)
             );
         }
-        return ingredient;
+        return product;
     }
 
     private DishView toView(Dish dish) {
         List<DishIngredientView> allIngredients = dish.getIngredients().stream()
-                .map(this::dishToIngredientView)
+                .map(this::toIngredientView)
                 .toList();
 
         List<RecipeStepView> allSteps = dish.getRecipeSteps().stream()
@@ -149,10 +191,10 @@ public class DishService implements DishApi {
         return new DishView(dish.getId(), dish.getName(), dish.getCategory().name(), allIngredients, allSteps);
     }
 
-    private DishIngredientView dishToIngredientView(DishIngredient ingredient) {
+    private DishIngredientView toIngredientView(DishIngredient ingredient) {
         return new DishIngredientView(
-                ingredient.ingredient().id(),
-                ingredient.ingredient().name(),
+                ingredient.product().id(),
+                ingredient.product().name(),
                 ingredient.amount(),
                 ingredient.unit().name()
         );

@@ -7,6 +7,7 @@ import com.familymenu.backend.dish.web.dto.DishResponse;
 import com.familymenu.backend.dish.web.dto.UpdateDishRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,9 +20,10 @@ public class DishController {
     private final DishService dishService;
     private final DishWebAssembler dishAssembler;
 
-    @PostMapping("/create")
-    public void createDish(@RequestBody @Valid CreateDishRequest request) {
-      dishService.createDish(dishAssembler.toDish(request));
+    @PostMapping({"", "/create"})
+    @ResponseStatus(HttpStatus.CREATED)
+    public DishResponse createDish(@RequestBody @Valid CreateDishRequest request) {
+      return dishAssembler.toDishResponse(dishService.createDish(dishAssembler.toDish(request)));
 
     }
 
@@ -45,6 +47,7 @@ public class DishController {
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteDish(@PathVariable String id) {
         dishService.deleteDish(id);
     }

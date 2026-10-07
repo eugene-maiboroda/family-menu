@@ -34,7 +34,13 @@ class ShoppingListServiceTest {
     void setUp() {
         menuApi = new InMemoryMenuApi();
         dishApi = new InMemoryDishApi();
-        service = new ShoppingListService(menuApi, dishApi, new ShoppingListCalculator());
+        service = new ShoppingListService(menuApi, dishApi, new com.familymenu.backend.product.api.ProductApi() {
+            public Optional<com.familymenu.backend.product.api.dto.ProductView> findById(String id) {
+                return Optional.of(new com.familymenu.backend.product.api.dto.ProductView(id, id));
+            }
+            public com.familymenu.backend.product.api.dto.ProductView resolveByName(String name) { throw new UnsupportedOperationException(); }
+            public List<com.familymenu.backend.product.api.dto.ProductView> getByIds(java.util.Collection<String> ids) { return ids.stream().map(id -> new com.familymenu.backend.product.api.dto.ProductView(id, id)).toList(); }
+        }, new ShoppingListCalculator());
     }
 
     @Test

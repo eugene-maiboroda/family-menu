@@ -13,7 +13,7 @@ public record UpdateDishRequest(
 
         @NotNull String category,
 
-        @NotEmpty @Valid List<IngredientRequest> ingredients,
+        @NotEmpty List<@NotNull @Valid IngredientRequest> ingredients,
 
-        @Valid List<RecipeStepRequest> recipeSteps
+        List<@NotNull @Valid RecipeStepRequest> recipeSteps
 ) {}

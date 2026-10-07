@@ -4,9 +4,9 @@ import java.math.BigDecimal;
 
 public record ShoppingListItemResponse(
 
-        String ingredientId,
+        String productId,
 
-        String ingredientName,
+        String productName,
 
         BigDecimal amount,
 

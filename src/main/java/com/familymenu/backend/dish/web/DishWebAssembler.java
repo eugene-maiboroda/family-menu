@@ -3,7 +3,7 @@ package com.familymenu.backend.dish.web;
 import com.familymenu.backend.dish.domain.Dish;
 import com.familymenu.backend.dish.domain.DishCategory;
 import com.familymenu.backend.dish.domain.DishIngredient;
-import com.familymenu.backend.dish.domain.IngredientReference;
+import com.familymenu.backend.dish.domain.ProductReference;
 import com.familymenu.backend.dish.domain.RecipeStep;
 import com.familymenu.backend.dish.domain.Unit;
 import com.familymenu.backend.dish.web.dto.CreateDishRequest;
@@ -67,7 +67,7 @@ public class DishWebAssembler {
 
     private List<DishIngredient> toDishIngredients(List<IngredientRequest> requests) {
         if (requests == null) {
-            return null;
+            return List.of();
         }
         return requests.stream()
                 .map(this::toDishIngredient)
@@ -80,7 +80,7 @@ public class DishWebAssembler {
         }
         return new DishIngredient(
                 null,
-                new IngredientReference(null, request.name()),
+                new ProductReference(request.productId(), request.name()),
                 request.amount(),
                 Unit.valueOf(request.unit())
         );
@@ -88,7 +88,7 @@ public class DishWebAssembler {
 
     private List<RecipeStep> toRecipeSteps(List<RecipeStepRequest> requests) {
         if (requests == null) {
-            return null;
+            return List.of();
         }
         return requests.stream()
                 .map(request -> new RecipeStep(request.description(), request.imageUrl()))
@@ -101,8 +101,8 @@ public class DishWebAssembler {
         }
         return ingredients.stream()
                 .map(ingredient -> new DishIngredientResponse(
-                        ingredient.ingredient().id(),
-                        ingredient.ingredient().name(),
+                        ingredient.product().id(),
+                        ingredient.product().name(),
                         ingredient.amount(),
                         ingredient.unit().name()
                 ))

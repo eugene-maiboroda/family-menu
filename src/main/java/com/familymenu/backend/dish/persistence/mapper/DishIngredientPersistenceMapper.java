@@ -1,7 +1,7 @@
 package com.familymenu.backend.dish.persistence.mapper;
 
 import com.familymenu.backend.dish.domain.DishIngredient;
-import com.familymenu.backend.dish.domain.IngredientReference;
+import com.familymenu.backend.dish.domain.ProductReference;
 import com.familymenu.backend.dish.persistence.DishIngredientEntity;
 import com.familymenu.backend.infrastructure.config.MapStructConfig;
 import org.mapstruct.Mapper;
@@ -12,7 +12,7 @@ public interface DishIngredientPersistenceMapper {
 
 
     @Mapping(target = "dishId", source = "dishId")
-    @Mapping(target = "ingredientId", source = "dishIngredient.ingredient.id")
+    @Mapping(target = "productId", source = "dishIngredient.product.id")
     @Mapping(target = "id", source = "dishIngredient.id")
     @Mapping(target = "amount", source = "dishIngredient.amount")
     @Mapping(target = "unit", source = "dishIngredient.unit")
@@ -21,8 +21,8 @@ public interface DishIngredientPersistenceMapper {
     DishIngredientEntity toEntity(String dishId, DishIngredient dishIngredient);
 
     @Mapping(target = "id", source = "entity.id")
-    @Mapping(target = "ingredient", source = "ingredient")
+    @Mapping(target = "product", source = "product")
     @Mapping(target = "amount", source = "entity.amount")
     @Mapping(target = "unit", source = "entity.unit")
-    DishIngredient toDomain(DishIngredientEntity entity, IngredientReference ingredient);
+    DishIngredient toDomain(DishIngredientEntity entity, ProductReference product);
 }

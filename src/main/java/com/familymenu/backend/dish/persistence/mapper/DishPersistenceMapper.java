@@ -17,5 +17,6 @@ public interface DishPersistenceMapper {
     DishEntity toEntity(Dish dish);
 
     @Mapping(target = "ingredients", source = "ingredients")
+    @Mapping(target = "recipeSteps", expression = "java(entity.getRecipeSteps() == null ? java.util.List.of() : entity.getRecipeSteps())")
     Dish toDomain(DishEntity entity, List<DishIngredient> ingredients);
 }
