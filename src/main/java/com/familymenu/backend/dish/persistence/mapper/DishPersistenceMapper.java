@@ -1,7 +1,8 @@
-package com.familymenu.backend.dish.persistence;
+package com.familymenu.backend.dish.persistence.mapper;
 
 import com.familymenu.backend.dish.domain.Dish;
 import com.familymenu.backend.dish.domain.DishIngredient;
+import com.familymenu.backend.dish.persistence.DishEntity;
 import com.familymenu.backend.infrastructure.config.MapStructConfig;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

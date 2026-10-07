@@ -1,4 +1,4 @@
-package com.familymenu.backend.menu.service;
+package com.familymenu.backend.menu.service.dto;
 
 import lombok.Builder;
 

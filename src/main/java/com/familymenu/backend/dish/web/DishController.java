@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/dishes")
 @RequiredArgsConstructor
@@ -19,6 +21,7 @@ public class DishController {
 
     @PostMapping("/create")
     public void createDish(@RequestBody @Valid CreateDishRequest request) {
+      dishService.createDish(dishAssembler.toDish(request));
 
     }
 
@@ -27,5 +30,22 @@ public class DishController {
         Dish dish = dishAssembler.toDish(request, id);
         Dish updatedDish = dishService.updateDish(dish);
         return dishAssembler.toDishResponse(updatedDish);
+    }
+
+    @GetMapping("/{id}")
+    public DishResponse getDish(@PathVariable String id) {
+        return dishAssembler.toDishResponse(dishService.getDish(id));
+    }
+
+    @GetMapping
+    public List<DishResponse> listDishes() {
+        return dishService.listDishes().stream()
+                .map(dishAssembler::toDishResponse)
+                .toList();
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteDish(@PathVariable String id) {
+        dishService.deleteDish(id);
     }
 }

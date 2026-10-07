@@ -8,6 +8,8 @@ import com.familymenu.backend.shopping.domain.ShoppingIngredient;
 import com.familymenu.backend.shopping.domain.ShoppingListCalculator;
 import com.familymenu.backend.shopping.domain.ShoppingListItem;
 import com.familymenu.backend.shopping.domain.Unit;
+import com.familymenu.backend.shopping.service.exception.ShoppingDishNotFoundException;
+import com.familymenu.backend.shopping.service.exception.ShoppingMenuNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +22,7 @@ public class ShoppingListService {
 
     private final MenuApi menuApi;
     private final DishApi dishApi;
-    private final ShoppingListCalculator calculator = new ShoppingListCalculator();
+    private final ShoppingListCalculator calculator;
 
     public List<ShoppingListItem> getShoppingList(String menuId) {
         MenuView menu = menuApi.findById(menuId)

@@ -7,4 +7,6 @@ import java.util.List;
 public interface DishIngredientRepository  extends JpaRepository<DishIngredientEntity, String> {
 
     List<DishIngredientEntity> findAllByDishId(String dishId);
+
+    void deleteAllByDishId(String id);
 }

@@ -10,6 +10,7 @@ import com.familymenu.backend.dish.domain.Unit;
 import com.familymenu.backend.dish.persistence.DishPersistenceService;
 import com.familymenu.backend.ingredient.api.IngredientApi;
 import com.familymenu.backend.ingredient.api.dto.IngredientView;
+import com.familymenu.backend.shared.IdGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -27,12 +28,21 @@ class DishServiceTest {
     private InMemoryDishPersistence dishPersistence;
     private InMemoryIngredientApi ingredientApi;
     private DishService dishService;
+    private final IdGenerator idGenerator = new IdGenerator() {
+        private int counter = 0;
+
+        @Override
+        public String generate() {
+            counter++;
+            return "dish-" + counter;
+        }
+    };
 
     @BeforeEach
     void setUp() {
         dishPersistence = new InMemoryDishPersistence();
         ingredientApi = new InMemoryIngredientApi();
-        dishService = new DishService(dishPersistence, ingredientApi);
+        dishService = new DishService(dishPersistence, ingredientApi, idGenerator);
     }
 
     @Test
@@ -101,6 +111,7 @@ class DishServiceTest {
                 .ingredients(List.of())
                 .build();
         dishPersistence.dishesById.put("dish-1", existing);
+        ingredientApi.ingredientsByName.put("Tomato", new IngredientView("ingredient-1", "Tomato"));
 
         Dish updated = dishService.updateDish(changes);
 
@@ -127,6 +138,7 @@ class DishServiceTest {
                 .build();
 
         dishPersistence.dishesById.put(dish.getId(), dish);
+        ingredientApi.ingredientsByName.put("Tomato", new IngredientView("ingredient-1", "Tomato"));
 
         List<DishView> views = dishService.getByIds(List.of("dish-1", "missing-dish"));
 
@@ -161,7 +173,7 @@ class DishServiceTest {
         private final List<Dish> savedDishes = new ArrayList<>();
 
         private InMemoryDishPersistence() {
-            super(null, null, null, null, null);
+            super(null, null, null, null);
         }
 
         @Override

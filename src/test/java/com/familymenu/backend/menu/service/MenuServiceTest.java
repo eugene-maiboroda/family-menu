@@ -4,6 +4,7 @@ import com.familymenu.backend.dish.api.DishApi;
 import com.familymenu.backend.dish.api.dto.DishView;
 import com.familymenu.backend.menu.domain.Menu;
 import com.familymenu.backend.menu.persistence.MenuPersistenceService;
+import com.familymenu.backend.menu.service.dto.CreateMenuCommand;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

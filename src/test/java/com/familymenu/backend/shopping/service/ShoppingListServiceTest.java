@@ -6,7 +6,10 @@ import com.familymenu.backend.dish.api.dto.DishView;
 import com.familymenu.backend.menu.api.MenuApi;
 import com.familymenu.backend.menu.api.dto.MenuView;
 import com.familymenu.backend.shopping.domain.ShoppingListItem;
+import com.familymenu.backend.shopping.domain.ShoppingListCalculator;
 import com.familymenu.backend.shopping.domain.Unit;
+import com.familymenu.backend.shopping.service.exception.ShoppingDishNotFoundException;
+import com.familymenu.backend.shopping.service.exception.ShoppingMenuNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +34,7 @@ class ShoppingListServiceTest {
     void setUp() {
         menuApi = new InMemoryMenuApi();
         dishApi = new InMemoryDishApi();
-        service = new ShoppingListService(menuApi, dishApi);
+        service = new ShoppingListService(menuApi, dishApi, new ShoppingListCalculator());
     }
 
     @Test

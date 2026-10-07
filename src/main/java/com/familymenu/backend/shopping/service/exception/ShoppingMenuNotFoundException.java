@@ -1,4 +1,4 @@
-package com.familymenu.backend.shopping.service;
+package com.familymenu.backend.shopping.service.exception;
 
 public class ShoppingMenuNotFoundException extends RuntimeException {
 

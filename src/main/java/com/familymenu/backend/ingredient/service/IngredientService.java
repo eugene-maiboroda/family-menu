@@ -39,4 +39,6 @@ public class IngredientService implements IngredientApi {
         Ingredient ingredient = new Ingredient(UUID.randomUUID().toString(), name);
         return ingredientMapper.toView(ingredientRepository.save(ingredientMapper.toEntity(ingredient)));
     }
+
+
 }
