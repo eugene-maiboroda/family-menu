@@ -68,7 +68,7 @@ CREATE TABLE dish_products (
 
 CREATE TABLE menus (
                        id VARCHAR(36) PRIMARY KEY,
-
+                       name VARCHAR(255) NOT NULL,
                        created_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

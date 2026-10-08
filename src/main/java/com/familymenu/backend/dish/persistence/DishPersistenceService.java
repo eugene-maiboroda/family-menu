@@ -41,8 +41,12 @@ public class DishPersistenceService {
         dishRepository.deleteById(id);
     }
 
-    public List<Dish> findDishes() {
-        return dishRepository.findAll().stream()
+    public List<Dish> findDishes(String searchQuery) {
+        String query = "";
+        if (searchQuery != null) {
+            query = searchQuery.strip();
+        }
+        return dishRepository.findByNameContainingIgnoreCaseOrderByNameAsc(query).stream()
                 .map(entity -> dishMapper.toDomain(entity, findDishIngredients(entity.getId())))
                 .toList();
     }

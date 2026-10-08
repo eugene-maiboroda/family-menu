@@ -172,6 +172,29 @@ class DishServiceTest {
         });
     }
 
+    @Test
+    void listDishesPassesSearchQueryAndResolvesCurrentProductNames() {
+        Dish dish = dishWithoutId("Pasta", List.of(new DishIngredient(
+                "relation-1", new ProductReference("product-1", "Old name"), BigDecimal.ONE, Unit.PCS
+        )));
+        dishPersistence.dishesById.put("dish-1", dish);
+        productApi.ingredientsByName.put("Tomato", new ProductView("product-1", "Tomato"));
+
+        List<Dish> dishes = dishService.listDishes("pasta");
+
+        assertThat(dishPersistence.receivedSearchQuery).isEqualTo("pasta");
+        assertThat(dishes).singleElement().satisfies(result -> {
+            assertThat(result.getName()).isEqualTo("Pasta");
+            assertThat(result.getIngredients().getFirst().product().name()).isEqualTo("Tomato");
+        });
+    }
+
+    @Test
+    void listDishesAcceptsMissingSearchQuery() {
+        assertThat(dishService.listDishes(null)).isEmpty();
+        assertThat(dishPersistence.receivedSearchQuery).isNull();
+    }
+
     private Dish dishWithoutId(String name, List<DishIngredient> ingredients) {
         return Dish.builder()
                 .name(name)
@@ -185,6 +208,7 @@ class DishServiceTest {
 
         private final Map<String, Dish> dishesById = new HashMap<>();
         private final List<Dish> savedDishes = new ArrayList<>();
+        private String receivedSearchQuery;
 
         private InMemoryDishPersistence() {
             super(null, null, null, null);
@@ -207,7 +231,8 @@ class DishServiceTest {
         }
 
         @Override
-        public List<Dish> findDishes() {
+        public List<Dish> findDishes(String searchQuery) {
+            receivedSearchQuery = searchQuery;
             return List.copyOf(dishesById.values());
         }
     }

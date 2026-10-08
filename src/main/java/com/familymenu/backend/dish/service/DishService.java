@@ -73,8 +73,8 @@ public class DishService implements DishApi {
         dishPersistence.deleteDishById(id);
     }
 
-    public List<Dish> listDishes() {
-        return dishPersistence.findDishes().stream()
+    public List<Dish> listDishes(String searchQuery) {
+        return dishPersistence.findDishes(searchQuery).stream()
                 .map(this::resolveProductReferences)
                 .toList();
     }

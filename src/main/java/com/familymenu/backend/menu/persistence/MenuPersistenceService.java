@@ -18,6 +18,7 @@ public class MenuPersistenceService {
     public Menu saveMenu(Menu menu) {
         MenuEntity entity = new MenuEntity();
         entity.setId(menu.id());
+        entity.setName(menu.name());
         entity.setCreatedDate(menu.createdDate());
         MenuEntity saved = menuRepository.save(entity);
 
@@ -27,7 +28,7 @@ public class MenuPersistenceService {
                 .toList();
         menuDishRepository.saveAll(relations);
 
-        return new Menu(saved.getId(), saved.getCreatedDate(), List.copyOf(menu.dishIds()));
+        return new Menu(saved.getId(), saved.getName(), saved.getCreatedDate(), List.copyOf(menu.dishIds()));
     }
 
     public void deleteMenu(String id) {
@@ -38,8 +39,12 @@ public class MenuPersistenceService {
         return menuRepository.findById(id).map(this::toDomain);
     }
 
-    public List<Menu> findAllMenus() {
-        return menuRepository.findAll().stream()
+    public List<Menu> findAllMenus(String query) {
+        String searchQuery = "";
+        if (query != null) {
+            searchQuery = query.strip();
+        }
+        return menuRepository.findByNameContainingIgnoreCaseOrderByNameAsc(searchQuery).stream()
                 .map(this::toDomain)
                 .toList();
     }
@@ -48,7 +53,7 @@ public class MenuPersistenceService {
         List<String> dishIds = menuDishRepository.findAllByMenuId(entity.getId()).stream()
                 .map(MenuDishEntity::getDishId)
                 .toList();
-        return new Menu(entity.getId(), entity.getCreatedDate(), dishIds);
+        return new Menu(entity.getId(), entity.getName(), entity.getCreatedDate(), dishIds);
     }
 
     private MenuDishEntity toRelation(String menuId, String dishId) {

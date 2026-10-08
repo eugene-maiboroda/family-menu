@@ -5,6 +5,8 @@ import java.util.List;
 
 public record MenuView(
         String id,
+
+        String name,
         Instant createdDate,
         List<String> dishIds
 ) {

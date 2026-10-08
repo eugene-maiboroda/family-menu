@@ -47,13 +47,14 @@ class ShoppingListServiceTest {
     void buildsShoppingListThroughMenuAndDishApis() {
         menuApi.menus.put("menu-1", new MenuView(
                 "menu-1",
+                "Weekly menu",
                 Instant.parse("2026-08-28T09:00:00Z"),
                 List.of("dish-1", "dish-2")
         ));
         dishApi.dishes.put("dish-1", dish("dish-1", ingredient("tomato", "Tomato", "500", "G")));
         dishApi.dishes.put("dish-2", dish("dish-2", ingredient("tomato", "Tomato", "700", "G")));
 
-        List<ShoppingListItem> result = service.getShoppingList("menu-1");
+        List<ShoppingListItem> result = service.calculateShoppingListWithMenus(List.of("menu-1"), List.of(), List.of());
 
         assertThat(result).containsExactly(
                 new ShoppingListItem("tomato", "Tomato", new BigDecimal("1.2"), Unit.KG)
@@ -62,7 +63,7 @@ class ShoppingListServiceTest {
 
     @Test
     void rejectsUnknownMenu() {
-        assertThatThrownBy(() -> service.getShoppingList("missing-menu"))
+        assertThatThrownBy(() -> service.calculateShoppingListWithMenus(List.of("missing-menu"), List.of(), List.of()))
                 .isInstanceOf(ShoppingMenuNotFoundException.class)
                 .hasMessageContaining("missing-menu");
     }
@@ -71,12 +72,13 @@ class ShoppingListServiceTest {
     void rejectsIncompleteDishReadFromModuleApi() {
         menuApi.menus.put("menu-1", new MenuView(
                 "menu-1",
+                "Weekly menu",
                 Instant.parse("2026-08-28T09:00:00Z"),
                 List.of("dish-1", "missing-dish")
         ));
         dishApi.dishes.put("dish-1", dish("dish-1", ingredient("tomato", "Tomato", "500", "G")));
 
-        assertThatThrownBy(() -> service.getShoppingList("menu-1"))
+        assertThatThrownBy(() -> service.calculateShoppingListWithMenus(List.of("menu-1"), List.of(), List.of()))
                 .isInstanceOf(ShoppingDishNotFoundException.class)
                 .hasMessageContaining("missing-dish");
     }

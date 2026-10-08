@@ -34,24 +34,6 @@ public class ShoppingListService {
     private final ProductApi productApi;
     private final ShoppingListCalculator shoppingListCalculator;
 
-    public List<ShoppingListItem> getShoppingList(String menuId) {
-        MenuView menu = menuApi.findById(menuId)
-                .orElseThrow(() -> new ShoppingMenuNotFoundException(menuId + " not found"));
-
-        return calculateShoppingList(menu.dishIds(), List.of());
-    }
-
-    public List<ShoppingListItem> calculateShoppingList(
-            List<String> dishIds,
-            List<AdditionalProduct> additionalProducts
-    ) {
-        List<DishView> dishes = loadSelectedDishes(dishIds);
-        List<ShoppingIngredient> productsToBuy = collectDishIngredients(dishes);
-        productsToBuy.addAll(collectAdditionalProducts(additionalProducts));
-
-        return shoppingListCalculator.calculateShoppingList(productsToBuy);
-    }
-
     public List<ShoppingListItem> calculateShoppingListWithMenus(
             List<String> menuIds,
             List<String> dishIds,

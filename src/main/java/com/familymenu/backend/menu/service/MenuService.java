@@ -35,6 +35,7 @@ public class MenuService implements MenuApi {
         validateDishesExist(menuCommand.dishIds());
         Menu menu = new Menu(
                 UUID.randomUUID().toString(),
+                normalizeMenuName(menuCommand.name()),
                 Instant.now(),
                 List.copyOf(menuCommand.dishIds())
         );
@@ -46,7 +47,10 @@ public class MenuService implements MenuApi {
     @Transactional
     public void updateMenu(Menu menu) {
         validateDishesExist(menu.dishIds());
-        menuPersistence.saveMenu(menu);
+        Menu updatedMenu = new Menu(
+                menu.id(), normalizeMenuName(menu.name()), menu.createdDate(), List.copyOf(menu.dishIds())
+        );
+        menuPersistence.saveMenu(updatedMenu);
     }
 
     @Transactional
@@ -55,8 +59,8 @@ public class MenuService implements MenuApi {
         menuPersistence.deleteMenu(id);
     }
 
-    public List<Menu> getMenus() {
-        return menuPersistence.findAllMenus();
+    public List<Menu> getMenus(String query) {
+        return menuPersistence.findAllMenus(query);
     }
 
     public Menu getMenu(String id) {
@@ -67,6 +71,17 @@ public class MenuService implements MenuApi {
     @Override
     public Optional<MenuView> findById(String id) {
         return menuPersistence.findMenuById(id).map(this::toView);
+    }
+
+    private String normalizeMenuName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Menu name is required");
+        }
+        String normalizedName = name.strip();
+        if (normalizedName.length() > 255) {
+            throw new IllegalArgumentException("Menu name is too long");
+        }
+        return normalizedName;
     }
 
     private void validateDishesExist(List<String> dishIds) {
@@ -83,6 +98,6 @@ public class MenuService implements MenuApi {
     }
 
     private MenuView toView(Menu menu) {
-        return new MenuView(menu.id(), menu.createdDate(), List.copyOf(menu.dishIds()));
+        return new MenuView(menu.id(), menu.name(), menu.createdDate(), List.copyOf(menu.dishIds()));
     }
 }

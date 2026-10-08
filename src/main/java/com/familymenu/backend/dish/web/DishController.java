@@ -20,7 +20,7 @@ public class DishController {
     private final DishService dishService;
     private final DishWebAssembler dishAssembler;
 
-    @PostMapping({"", "/create"})
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public DishResponse createDish(@RequestBody @Valid CreateDishRequest request) {
         return dishAssembler.toDishResponse(dishService.createDish(dishAssembler.toDish(request)));
@@ -40,8 +40,8 @@ public class DishController {
     }
 
     @GetMapping
-    public List<DishResponse> listDishes() {
-        return dishService.listDishes().stream()
+    public List<DishResponse> listDishes(@RequestParam(required = false) String query) {
+        return dishService.listDishes(query).stream()
                 .map(dishAssembler::toDishResponse)
                 .toList();
     }

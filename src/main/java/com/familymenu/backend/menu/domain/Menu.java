@@ -10,6 +10,8 @@ public record Menu(
 
         String id,
 
+        String name,
+
         Instant createdDate,
 
         List<String> dishIds
