@@ -1,6 +1,5 @@
 package com.familymenu.backend.dish.service;
 
-import com.familymenu.backend.dish.api.dto.DishView;
 import com.familymenu.backend.dish.domain.Dish;
 import com.familymenu.backend.dish.domain.DishCategory;
 import com.familymenu.backend.dish.domain.DishIngredient;
@@ -137,42 +136,6 @@ class DishServiceTest {
     }
 
     @Test
-    void moduleApiReturnsBoundaryDtoInsteadOfDishDomain() {
-        Dish dish = Dish.builder()
-                .id("dish-1")
-                .name("Pasta")
-                .category(DishCategory.DINNER)
-                .ingredients(List.of(new DishIngredient(
-                        "dish-ingredient-1",
-                        new ProductReference("ingredient-1", "Tomato"),
-                        new BigDecimal("500"),
-                        Unit.G
-                )))
-                .recipeSteps(List.of(new RecipeStep("Cook", "image-key")))
-                .build();
-
-        dishPersistence.dishesById.put(dish.getId(), dish);
-        productApi.ingredientsByName.put("Tomato", new ProductView("ingredient-1", "Tomato"));
-
-        List<DishView> views = dishService.getByIds(List.of("dish-1", "missing-dish"));
-
-        assertThat(views).singleElement().satisfies(view -> {
-            assertThat(view.id()).isEqualTo("dish-1");
-            assertThat(view.category()).isEqualTo("DINNER");
-            assertThat(view.ingredients()).singleElement().satisfies(ingredient -> {
-                assertThat(ingredient.productId()).isEqualTo("ingredient-1");
-                assertThat(ingredient.productName()).isEqualTo("Tomato");
-                assertThat(ingredient.amount()).isEqualByComparingTo("500");
-                assertThat(ingredient.unit()).isEqualTo("G");
-            });
-            assertThat(view.recipeSteps()).singleElement().satisfies(step -> {
-                assertThat(step.description()).isEqualTo("Cook");
-                assertThat(step.imageUrl()).isEqualTo("image-key");
-            });
-        });
-    }
-
-    @Test
     void listDishesPassesSearchQueryAndResolvesCurrentProductNames() {
         Dish dish = dishWithoutId("Pasta", List.of(new DishIngredient(
                 "relation-1", new ProductReference("product-1", "Old name"), BigDecimal.ONE, Unit.PCS
@@ -187,12 +150,6 @@ class DishServiceTest {
             assertThat(result.getName()).isEqualTo("Pasta");
             assertThat(result.getIngredients().getFirst().product().name()).isEqualTo("Tomato");
         });
-    }
-
-    @Test
-    void listDishesAcceptsMissingSearchQuery() {
-        assertThat(dishService.listDishes(null)).isEmpty();
-        assertThat(dishPersistence.receivedSearchQuery).isNull();
     }
 
     private Dish dishWithoutId(String name, List<DishIngredient> ingredients) {

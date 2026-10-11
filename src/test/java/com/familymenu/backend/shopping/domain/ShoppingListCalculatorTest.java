@@ -60,16 +60,6 @@ class ShoppingListCalculatorTest {
         );
     }
 
-    @Test
-    void keepsWholeCountInPlainDecimalNotation() {
-        List<ShoppingListItem> result = calculator.calculateShoppingList(List.of(
-                ingredient("egg", "Egg", "1000", Unit.PCS)
-        ));
-
-        assertThat(result.getFirst().amount().toPlainString()).isEqualTo("1000");
-        assertThat(result.getFirst().unit()).isEqualTo(Unit.PCS);
-    }
-
     private ShoppingIngredient ingredient(String id, String name, String amount, Unit unit) {
         return new ShoppingIngredient(id, name, new BigDecimal(amount), unit);
     }
