@@ -38,3 +38,4 @@ build/
 AGENTS.md
 
 /docs/
+.DS_Store
