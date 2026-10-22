@@ -1,0 +1,55 @@
+# Install manually as .github/workflows/devguard-push.yml.
+# Collects push metadata only. Never checks out or executes repository code.
+name: DevGuard Push Metadata v1
+on:
+  push:
+    branches: ['**']
+permissions: {}
+jobs:
+  metadata:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Write bounded push metadata
+        shell: bash
+        env:
+          DG_RUN_ID: ${{ github.run_id }}
+          DG_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          python3 - <<'PY'
+          import datetime, json, os, pathlib
+          event = json.loads(pathlib.Path(os.environ['GITHUB_EVENT_PATH']).read_text())
+          timestamp = event['repository']['pushed_at']
+          if isinstance(timestamp, (int, float)):
+              timestamp = datetime.datetime.fromtimestamp(timestamp, datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+          else:
+              timestamp = datetime.datetime.fromisoformat(timestamp.replace('Z', '+00:00')).astimezone(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+          metadata = {
+              'schema_version': 1,
+              'repository_id': event['repository']['id'],
+              'repository_full_name': event['repository']['full_name'],
+              'event_name': 'push',
+              'run_id': int(os.environ['DG_RUN_ID']),
+              'run_attempt': int(os.environ['DG_RUN_ATTEMPT']),
+              'workflow_path': '.github/workflows/devguard-push.yml',
+              'ref_name': event['ref'],
+              'before_sha': event['before'],
+              'after_sha': event['after'],
+              'created': event['created'],
+              'deleted': event['deleted'],
+              'forced': event['forced'],
+              'pushed_at': timestamp,
+              'source': 'github-actions',
+          }
+          data = json.dumps(metadata, separators=(',', ':'))
+          assert len(data.encode()) <= 32768, 'metadata exceeds contract limit'
+          pathlib.Path('metadata.json').write_text(data)
+          PY
+      - name: Upload metadata
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: devguard-push-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          path: metadata.json
+          archive: true
+          if-no-files-found: error
+          retention-days: 90
